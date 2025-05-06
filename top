@@ -1,0 +1,2996 @@
+proposal  
+
+Name	 	Value
+id	=  	
+Deals.Deal Id
+
+// Get the initial data
+allData = zoho.crm.getRecordById("Deals",id);
+Email = allData.get("Email");
+createdBy = allData.get("Owner");
+creatorEmail = createdBy.get("email");
+creatorName = createdBy.get("name");
+proposalIdMap = allData.get("Proposal");
+proposalId = proposalIdMap.get("id");
+allDatax = zoho.crm.getRecordById("Proposal",proposalId);
+Hardware_specify = allDatax.get("Hardware_Specifications");
+Installation_timeline = allDatax.get("Installation_timeline");
+ILL_Terms = allDatax.get("ILL_Terms");
+Boradband_Terms = allDatax.get("Boradband_Terms");
+proposalDetails = allDatax.get("Details");
+proposalOwner = allDatax.get("Owner");
+tataComManagedServicesb = false;
+tataComslaServicesb = false;
+tataComManagedServices = false;
+tataComslaServices = false;
+hardwarespecifyp = "";
+TableTataCom = "";
+broadbandTableTataCom = "";
+flagk = false;
+flagkg = false;
+////////////////// 
+countmm = 0;
+countss = 0;
+countmmx = 0;
+countssx = 0;
+for each  detailx in proposalDetails
+{
+	productName = detailx.get("Product_Name").get("name");
+	vendors = detailx.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	Reference = detailx.get("References");
+	// If vendor is "TATA COMMUNICATIONS LIMITED" and product is "Broadband", check for "M-S" in Reference
+	if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmm = countmm + 1;
+		info "xxxxxxxx";
+		flagk = true;
+	}
+	if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countss = countss + 1;
+		info "zzzzzzzzz";
+		flagk = true;
+	}
+	if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmx = countmmx + 1;
+		flagkg = true;
+	}
+	if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssx = countssx + 1;
+		flagkg = true;
+	}
+}
+////////////////////
+cou = 0;
+coua = 0;
+// Initialize the counters
+counterx = 0;
+counterxp = 0;
+counterxx = 0;
+counterxpp = 0;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Loop through the proposal details
+for each  detail in proposalDetails
+{
+	Reference = detail.get("References");
+	// Get product name and vendor
+	productName = detail.get("Product_Name").get("name");
+	vendors = detail.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA COMMUNICATIONS LIMITED
+	if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterx = counterx + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxp = counterxp + 1;
+		}
+	}
+}
+for each  detailv in proposalDetails
+{
+	// Get product name and vendor
+	productName = detailv.get("Product_Name").get("name");
+	vendors = detailv.get("Vendors");
+	Reference = detailv.get("References");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA COMMUNICATIONS LIMITED
+	if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detailv.get("Managed_Services_Charges");
+		slaServicesCharges = detailv.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxx = counterxx + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxpp = counterxpp + 1;
+		}
+	}
+}
+/////////>>>>>>>>>>>>>>>>>>>>>>>> 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Process proposal details to generate tables
+if(proposalDetails != null && proposalDetails != "")
+{
+	for each  detail in proposalDetails
+	{
+		// Initialize vendor and product details
+		vendors = detail.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		productName = detail.get("Product_Name").get("name");
+		Reference = detail.get("References");
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// Ensure Managed Services Charges and SLA Services Charges are set to "0" if null or empty
+		// Create the table row for the product
+		contract_value = "";
+		if(detail.get("Contract") == null)
+		{
+			contract_value = "0";
+		}
+		else
+		{
+			contract_value = detail.get("Contract");
+		}
+		bandwidth_capacity_value = "";
+		if(detail.get("Bandwidth_Capacity") == null)
+		{
+			bandwidth_capacity_value = "0";
+		}
+		else
+		{
+			bandwidth_capacity_value = detail.get("Bandwidth_Capacity");
+		}
+		bandwidth_value = "";
+		if(detail.get("Bandwidth") == null)
+		{
+			bandwidth_value = "0";
+		}
+		else
+		{
+			bandwidth_value = detail.get("Bandwidth");
+		}
+		bw_arc_value = "";
+		if(detail.get("BW_ARC") == null)
+		{
+			bw_arc_value = "0";
+		}
+		else
+		{
+			bw_arc_value = detail.get("BW_ARC");
+		}
+		bw_nrc_value = "";
+		if(detail.get("BW_NRC") == null)
+		{
+			bw_nrc_value = "0";
+		}
+		else
+		{
+			bw_nrc_value = detail.get("BW_NRC");
+		}
+		City = "";
+		if(detail.get("City") == null)
+		{
+			City = "";
+		}
+		else
+		{
+			City = detail.get("City");
+		}
+		tableRow = "<tr><td>" + vendorName + "</td><td>" + contract_value + "</td><td>" + bandwidth_capacity_value + "</td><td>" + bandwidth_value + "</td><td>" + productName + "</td><td>" + bw_arc_value + "</td><td>" + bw_nrc_value + "</td><td>" + City + "</td>";
+		// Check if the product is Broadband and process accordingly
+		///////////////////////////////////////////////
+		if(counterx > 0 && counterxp > 0)
+		{
+			flagk = false;
+			if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					tataComManagedServicesb = true;
+					tataComslaServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					cou = cou + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(cou > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tataComManagedServicesb = true;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						tataComManagedServicesb = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(cou > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tataComslaServicesb = true;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						tataComslaServicesb = true;
+						slaServices = ifnull(slaServicesCharges,0);
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					tataComslaServicesb = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					tataComManagedServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmm > 0 || countss > 0) && flagk = true)
+		{
+			info "my kisoskk";
+			if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					info "4545";
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tataComManagedServicesb = true;
+					tataComslaServicesb = true;
+					broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					info "11114545";
+					tataComManagedServicesb = true;
+					tataComslaServicesb = true;
+					broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				//////////////////////////////
+				///////////////////////////////////
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					info "3" + countss;
+					if(countss >= 1)
+					{
+						info "jackpaul";
+						tataComManagedServicesb = true;
+						tataComslaServicesb = true;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						info "jackpaulxx";
+						tataComManagedServicesb = true;
+						tataComslaServicesb = false;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				//////////////////////////////////
+				/////////////////////////////
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					info "burger";
+					if(countmm >= 1)
+					{
+						tataComManagedServicesb = true;
+						tataComslaServicesb = true;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						tataComManagedServicesb = false;
+						tataComslaServicesb = true;
+						broadbandTableTataCom = broadbandTableTataCom + tableRow + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				//////////////////////////////
+				////////////////////////////
+				else
+				{
+					tataComslaServicesb = true;
+					tataComManagedServicesb = true;
+					broadbandTableTataCom = broadbandTableTataCom + tableRow;
+				}
+			}
+		}
+		else
+		{
+			if(productName == "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				broadbandTableTataCom = broadbandTableTataCom + tableRow;
+			}
+		}
+		////////////////////////////////////////////////////////////
+		if(counterxx > 0 && counterxpp > 0)
+		{
+			flagkg = false;
+			if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					tataComslaServices = true;
+					tataComManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					TableTataCom = TableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					cou = cou + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(cou > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tataComManagedServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tataComManagedServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(cou > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tataComslaServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tataComslaServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>0</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					tataComslaServices = true;
+					tataComManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					TableTataCom = TableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+			}
+		}
+		else if((countmmx > 0 || countssx > 0) && flagkg = true)
+		{
+			info "ok dsds";
+			if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				info "checko";
+				info slaServices;
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					info "111";
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tataComManagedServices = true;
+					tataComslaServices = true;
+					TableTataCom = TableTataCom + tableRow + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					info "22111";
+					tataComManagedServices = true;
+					tataComslaServices = true;
+					TableTataCom = TableTataCom + tableRow + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					info "333111";
+					info "jack";
+					if(countssx >= 1)
+					{
+						tataComManagedServices = true;
+						tataComslaServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						tataComManagedServices = true;
+						tataComslaServices = false;
+						TableTataCom = TableTataCom + tableRow + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					info "hhh";
+					if(countmmx >= 1)
+					{
+						tataComManagedServices = true;
+						tataComslaServices = true;
+						TableTataCom = TableTataCom + tableRow + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						tataComManagedServices = false;
+						tataComslaServices = true;
+						TableTataCom = TableTataCom + tableRow + " <td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					tataComslaServices = true;
+					tataComManagedServices = true;
+					TableTataCom = TableTataCom + tableRow;
+				}
+			}
+		}
+		else
+		{
+			if(productName != "Broadband" && vendorName == "TATA COMMUNICATIONS LIMITED")
+			{
+				TableTataCom = TableTataCom + tableRow;
+			}
+		}
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	}
+}
+////////////////////////////////////////
+//////////////////////////////////////
+tslManagedServicesb = false;
+tslslaServicesb = false;
+tslManagedServices = false;
+tslslaServices = false;
+tslCom = "";
+broadbandtsl = "";
+flagktsl = false;
+flagkgtsl = false;
+countmmtsl = 0;
+countsstsl = 0;
+countmmxtsl = 0;
+countssxtsl = 0;
+coutsl = 0;
+couatsl = 0;
+// Initialize the counters
+counterxtsl = 0;
+counterxptsl = 0;
+counterxxtsl = 0;
+counterxpptsl = 0;
+////////////////// 
+for each  detailx in proposalDetails
+{
+	productName = detailx.get("Product_Name").get("name");
+	vendors = detailx.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	Reference = detailx.get("References");
+	// If vendor is "TATA TELESERVICES LIMITED" and product is "Broadband", check for "M-S" in Reference
+	if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmtsl = countmmtsl + 1;
+		flagktsl = true;
+	}
+	if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countsstsl = countsstsl + 1;
+		flagktsl = true;
+	}
+	if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmxtsl = countmmxtsl + 1;
+		flagkgtsl = true;
+	}
+	if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssxtsl = countssxtsl + 1;
+		flagkgtsl = true;
+	}
+}
+////////////////////
+for each  detail in proposalDetails
+{
+	Reference = detail.get("References");
+	// Get product name and vendor
+	productName = detail.get("Product_Name").get("name");
+	vendors = detail.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA TELESERVICES LIMITED
+	if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxtsl = counterxtsl + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxptsl = counterxptsl + 1;
+		}
+	}
+}
+for each  detailv in proposalDetails
+{
+	// Get product name and vendor
+	productName = detailv.get("Product_Name").get("name");
+	vendors = detailv.get("Vendors");
+	Reference = detailv.get("References");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA TELESERVICES LIMITED
+	if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED" && Reference == "M-S")
+	{
+		info "testing tatatele";
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detailv.get("Managed_Services_Charges");
+		slaServicesCharges = detailv.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxxtsl = counterxxtsl + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxpptsl = counterxpptsl + 1;
+		}
+	}
+}
+/////////>>>>>>>>>>>>>>>>>>>>>>>>> 
+// Process proposal details to generate tables
+if(proposalDetails != null && proposalDetails != "")
+{
+	for each  detail in proposalDetails
+	{
+		// Initialize vendor and product details
+		vendors = detail.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		productName = detail.get("Product_Name").get("name");
+		Reference = detail.get("References");
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// Ensure Managed Services Charges and SLA Services Charges are set to "0" if null or empty
+		// Create the table row for the product
+		contract_value = "";
+		if(detail.get("Contract") == null)
+		{
+			contract_value = "0";
+		}
+		else
+		{
+			contract_value = detail.get("Contract");
+		}
+		bandwidth_capacity_value = "";
+		if(detail.get("Bandwidth_Capacity") == null)
+		{
+			bandwidth_capacity_value = "0";
+		}
+		else
+		{
+			bandwidth_capacity_value = detail.get("Bandwidth_Capacity");
+		}
+		bandwidth_value = "";
+		if(detail.get("Bandwidth") == null)
+		{
+			bandwidth_value = "0";
+		}
+		else
+		{
+			bandwidth_value = detail.get("Bandwidth");
+		}
+		bw_arc_value = "";
+		if(detail.get("BW_ARC") == null)
+		{
+			bw_arc_value = "0";
+		}
+		else
+		{
+			bw_arc_value = detail.get("BW_ARC");
+		}
+		bw_nrc_value = "";
+		if(detail.get("BW_NRC") == null)
+		{
+			bw_nrc_value = "0";
+		}
+		else
+		{
+			bw_nrc_value = detail.get("BW_NRC");
+		}
+		City = "";
+		if(detail.get("City") == null)
+		{
+			City = "";
+		}
+		else
+		{
+			City = detail.get("City");
+		}
+		tableRowtsl = "<tr><td>" + vendorName + "</td><td>" + contract_value + "</td><td>" + bandwidth_capacity_value + "</td><td>" + bandwidth_value + "</td><td>" + productName + "</td><td>" + bw_arc_value + "</td><td>" + bw_nrc_value + "</td><td>" + City + "</td>";
+		///////////////////////////////////////////////
+		if(counterxtsl > 0 && counterxptsl > 0)
+		{
+			info "jack pall";
+			flagktsl = false;
+			if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					tslManagedServicesb = true;
+					tslslaServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					coutsl = coutsl + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(coutsl > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tslManagedServicesb = true;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						tslManagedServicesb = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(coutsl > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tslslaServicesb = true;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						tslslaServicesb = true;
+						slaServices = ifnull(slaServicesCharges,0);
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					tslslaServicesb = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					tslManagedServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmmtsl > 0 || countsstsl > 0) && flagktsl = true)
+		{
+			if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tslManagedServicesb = true;
+					tslslaServicesb = true;
+					broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					tslManagedServicesb = true;
+					tslslaServicesb = true;
+					broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countsstsl >= 1)
+					{
+						tslManagedServicesb = true;
+						tslslaServicesb = true;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						tslManagedServicesb = true;
+						tslslaServicesb = false;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmtsl >= 1)
+					{
+						tslManagedServicesb = true;
+						tslslaServicesb = true;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						tslManagedServicesb = false;
+						tslslaServicesb = true;
+						broadbandtsl = broadbandtsl + tableRowtsl + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					tslslaServicesb = true;
+					tslManagedServicesb = true;
+					broadbandtsl = broadbandtsl + tableRowtsl;
+				}
+			}
+		}
+		else
+		{
+			if(productName == "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				broadbandtsl = broadbandtsl + tableRowtsl;
+			}
+		}
+		////////////////////////////////////////////////////
+		if(counterxxtsl > 0 && counterxpptsl > 0)
+		{
+			info "testing";
+			flagkgtsl = false;
+			if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					tslslaServices = true;
+					tslManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tslCom = tslCom + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					coutsl = coutsl + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(coutsl > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tslManagedServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						tslManagedServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					info "only sla testing";
+					if(coutsl > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tslslaServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						tslslaServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					tslslaServices = true;
+					tslManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tslCom = tslCom + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+			}
+		}
+		else if((countmmxtsl > 0 || countssxtsl > 0) && flagkgtsl = true)
+		{
+			if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					tslManagedServices = true;
+					tslslaServices = true;
+					tslCom = tslCom + tableRowtsl + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					tslManagedServices = true;
+					tslslaServices = true;
+					tslCom = tslCom + tableRowtsl + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countssxtsl >= 1)
+					{
+						tslManagedServices = true;
+						tslslaServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						tslManagedServices = true;
+						tslslaServices = false;
+						tslCom = tslCom + tableRowtsl + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmxtsl >= 1)
+					{
+						tslManagedServices = true;
+						tslslaServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						tslManagedServices = false;
+						tslslaServices = true;
+						tslCom = tslCom + tableRowtsl + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					tslslaServices = true;
+					tslManagedServices = true;
+					tslCom = tslCom + tableRowtsl;
+				}
+			}
+		}
+		else
+		{
+			if(productName != "Broadband" && vendorName == "TATA TELESERVICES LIMITED")
+			{
+				tslCom = tslCom + tableRowtsl;
+			}
+		}
+	}
+}
+///////////////////////////////////////
+airtelManagedServicesb = false;
+airtelslaServicesb = false;
+airtelManagedServices = false;
+airtelslaServices = false;
+airtelCom = "";
+broadbandairtel = "";
+flagkairtel = false;
+flagkgairtel = false;
+countmmairtel = 0;
+countssairtel = 0;
+countmmxairtel = 0;
+countssxairtel = 0;
+couairtel = 0;
+couaairtel = 0;
+// Initialize the counters
+counterxairtel = 0;
+counterxpairtel = 0;
+counterxxairtel = 0;
+counterxppairtel = 0;
+////////////////// 
+for each  detailx in proposalDetails
+{
+	productName = detailx.get("Product_Name").get("name");
+	vendors = detailx.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	Reference = detailx.get("References");
+	// If vendor is "AIRTEL" and product is "Broadband", check for "M-S" in Reference
+	if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmairtel = countmmairtel + 1;
+		flagkairtel = true;
+	}
+	if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssairtel = countssairtel + 1;
+		flagkairtel = true;
+	}
+	if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmxairtel = countmmxairtel + 1;
+		flagkgairtel = true;
+	}
+	if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssxairtel = countssxairtel + 1;
+		flagkgairtel = true;
+	}
+}
+////////////////////
+for each  detail in proposalDetails
+{
+	Reference = detail.get("References");
+	// Get product name and vendor
+	productName = detail.get("Product_Name").get("name");
+	vendors = detail.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is AIRTEL
+	if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxairtel = counterxairtel + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxpairtel = counterxpairtel + 1;
+		}
+	}
+}
+for each  detailv in proposalDetails
+{
+	// Get product name and vendor
+	productName = detailv.get("Product_Name").get("name");
+	vendors = detailv.get("Vendors");
+	Reference = detailv.get("References");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is AIRTEL
+	if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detailv.get("Managed_Services_Charges");
+		slaServicesCharges = detailv.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxxairtel = counterxxairtel + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxppairtel = counterxppairtel + 1;
+		}
+	}
+}
+/////////>>>>>>>>>>>>>>>>>>>>>>>>> 
+// Process proposal details to generate tables
+if(proposalDetails != null && proposalDetails != "")
+{
+	for each  detail in proposalDetails
+	{
+		// Initialize vendor and product details
+		vendors = detail.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		productName = detail.get("Product_Name").get("name");
+		Reference = detail.get("References");
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// Ensure Managed Services Charges and SLA Services Charges are set to "0" if null or empty
+		// Create the table row for the product
+		contract_value = "";
+		if(detail.get("Contract") == null)
+		{
+			contract_value = "0";
+		}
+		else
+		{
+			contract_value = detail.get("Contract");
+		}
+		bandwidth_capacity_value = "";
+		if(detail.get("Bandwidth_Capacity") == null)
+		{
+			bandwidth_capacity_value = "0";
+		}
+		else
+		{
+			bandwidth_capacity_value = detail.get("Bandwidth_Capacity");
+		}
+		bandwidth_value = "";
+		if(detail.get("Bandwidth") == null)
+		{
+			bandwidth_value = "0";
+		}
+		else
+		{
+			bandwidth_value = detail.get("Bandwidth");
+		}
+		bw_arc_value = "";
+		if(detail.get("BW_ARC") == null)
+		{
+			bw_arc_value = "0";
+		}
+		else
+		{
+			bw_arc_value = detail.get("BW_ARC");
+		}
+		bw_nrc_value = "";
+		if(detail.get("BW_NRC") == null)
+		{
+			bw_nrc_value = "0";
+		}
+		else
+		{
+			bw_nrc_value = detail.get("BW_NRC");
+		}
+		City = "";
+		if(detail.get("City") == null)
+		{
+			City = "";
+		}
+		else
+		{
+			City = detail.get("City");
+		}
+		tableRowairtel = "<tr><td>" + vendorName + "</td><td>" + contract_value + "</td><td>" + bandwidth_capacity_value + "</td><td>" + bandwidth_value + "</td><td>" + productName + "</td><td>" + bw_arc_value + "</td><td>" + bw_nrc_value + "</td> <td>" + City + "</td>";
+		///////////////////////////////////////////////
+		if(counterxairtel > 0 && counterxpairtel > 0)
+		{
+			flagkairtel = false;
+			if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					airtelManagedServicesb = true;
+					airtelslaServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					couairtel = couairtel + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(couairtel > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						airtelManagedServicesb = true;
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						airtelManagedServicesb = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(couairtel > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						airtelslaServicesb = true;
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						airtelslaServicesb = true;
+						slaServices = ifnull(slaServicesCharges,0);
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					airtelslaServicesb = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					airtelManagedServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmmairtel > 0 || countssairtel > 0) && flagkairtel == true)
+		{
+			if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					airtelManagedServicesb = true;
+					airtelslaServicesb = true;
+					broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					airtelManagedServicesb = true;
+					airtelslaServicesb = true;
+					broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countssairtel >= 1)
+					{
+						airtelManagedServicesb = true;
+						airtelslaServicesb = true;
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						airtelManagedServicesb = true;
+						airtelslaServicesb = false;
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmairtel >= 1)
+					{
+						airtelManagedServicesb = true;
+						airtelslaServicesb = true;
+						broadbandairtel = broadbandairtel + tableRowairtel + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						airtelManagedServicesb = false;
+						airtelslaServicesb = true;
+						broadbandairtel = broadbandairtel + tableRowairtel + " <td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					airtelslaServicesb = true;
+					airtelManagedServicesb = true;
+					broadbandairtel = broadbandairtel + tableRowairtel;
+				}
+			}
+		}
+		else
+		{
+			if(productName == "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				broadbandairtel = broadbandairtel + tableRowairtel;
+			}
+		}
+		////////////////////////////////////////////////////
+		if(counterxxairtel > 0 && counterxppairtel > 0)
+		{
+			flagkgairtel = false;
+			if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					airtelslaServices = true;
+					airtelManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					airtelCom = airtelCom + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					couaairtel = couaairtel + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(couaairtel > 0)
+					{
+						airtelManagedServices = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						airtelCom = airtelCom + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						airtelManagedServices = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						airtelCom = airtelCom + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(couaairtel > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						airtelslaServices = true;
+						airtelCom = airtelCom + tableRowairtel + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						airtelslaServices = true;
+						slaServices = ifnull(slaServicesCharges,0);
+						airtelCom = airtelCom + tableRowairtel + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					airtelslaServices = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					airtelManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					airtelCom = airtelCom + tableRowairtel + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmmxairtel > 0 || countssxairtel > 0) && flagkgairtel == true)
+		{
+			if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					airtelManagedServices = true;
+					airtelslaServices = true;
+					airtelCom = airtelCom + tableRowairtel + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					airtelManagedServices = true;
+					airtelslaServices = true;
+					airtelCom = airtelCom + tableRowairtel + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countssxairtel >= 1)
+					{
+						airtelManagedServices = true;
+						airtelslaServices = true;
+						airtelCom = airtelCom + tableRowairtel + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						airtelManagedServices = true;
+						airtelslaServices = false;
+						airtelCom = airtelCom + tableRowairtel + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmxairtel >= 1)
+					{
+						airtelManagedServices = true;
+						airtelslaServices = true;
+						airtelCom = airtelCom + tableRowairtel + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						airtelManagedServices = false;
+						airtelslaServices = true;
+						airtelCom = airtelCom + tableRowairtel + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					airtelslaServices = true;
+					airtelManagedServices = true;
+					airtelCom = airtelCom + tableRowairtel;
+				}
+			}
+		}
+		else
+		{
+			if(productName != "Broadband" && vendorName == "BHARTI AIRTEL LIMITED")
+			{
+				airtelCom = airtelCom + tableRowairtel;
+			}
+		}
+		/////////////////////////////////////////////
+	}
+}
+////////////////////////////////////////
+//////////////////////////////////////
+otherManagedServicesb = false;
+otherslaServicesb = false;
+otherManagedServices = false;
+otherslaServices = false;
+otherCom = "";
+broadbandother = "";
+flagkother = false;
+flagkgother = false;
+////////////////// 
+countmmother = 0;
+countssother = 0;
+countmmxother = 0;
+countssxother = 0;
+couother = 0;
+couaother = 0;
+counterxother = 0;
+counterxpother = 0;
+counterxxother = 0;
+counterxppother = 0;
+for each  detailx in proposalDetails
+{
+	productName = detailx.get("Product_Name").get("name");
+	vendors = detailx.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	Reference = detailx.get("References");
+	// If vendor is "TATA COMMUNICATIONS LIMITED" and product is "Broadband", check for "M-S" in Reference
+	if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmother = countmmother + 1;
+		flagkother = true;
+	}
+	if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssother = countssother + 1;
+		flagkother = true;
+	}
+	if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == 'M')
+	{
+		msReferenceExistspop = true;
+		countmmxother = countmmxother + 1;
+		flagkgother = true;
+	}
+	if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == "S")
+	{
+		msReferenceExistspops = true;
+		countssxother = countssxother + 1;
+		flagkgother = true;
+	}
+}
+couother = 0;
+couaother = 0;
+// Initialize the counters
+counterxother = 0;
+counterxpother = 0;
+counterxxother = 0;
+counterxppother = 0;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Loop through the proposal details
+for each  detail in proposalDetails
+{
+	Reference = detail.get("References");
+	// Get product name and vendor
+	productName = detail.get("Product_Name").get("name");
+	vendors = detail.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA COMMUNICATIONS LIMITED
+	if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxother = counterxother + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxpother = counterxpother + 1;
+		}
+	}
+}
+for each  detailv in proposalDetails
+{
+	// Get product name and vendor
+	productName = detailv.get("Product_Name").get("name");
+	vendors = detailv.get("Vendors");
+	Reference = detailv.get("References");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check if product is Broadband and vendor is TATA COMMUNICATIONS LIMITED
+	if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED" && Reference == "M-S")
+	{
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detailv.get("Managed_Services_Charges");
+		slaServicesCharges = detailv.get("Service_Level_Agreement");
+		// If managedServicesCharges is not null or empty, increment counter
+		if(managedServicesCharges != null && managedServicesCharges != "")
+		{
+			counterxxother = counterxxother + 1;
+		}
+		// If slaServicesCharges is not null or empty, increment counter
+		if(slaServicesCharges != null && slaServicesCharges != "")
+		{
+			counterxppother = counterxppother + 1;
+		}
+	}
+}
+/////////>>>>>>>>>>>>>>>>>>>>>>>> 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// // Process proposal details to generate tables
+if(proposalDetails != null && proposalDetails != "")
+{
+	for each  detail in proposalDetails
+	{
+		// Initialize vendor and product details
+		vendors = detail.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		productName = detail.get("Product_Name").get("name");
+		Reference = detail.get("References");
+		// Get Managed Services Charges and SLA Services Charges
+		managedServicesCharges = detail.get("Managed_Services_Charges");
+		slaServicesCharges = detail.get("Service_Level_Agreement");
+		// Ensure Managed Services Charges and SLA Services Charges are set to "0" if null or empty
+		// Create the table row for the product
+		contract_value = "";
+		if(detail.get("Contract") == null)
+		{
+			contract_value = "0";
+		}
+		else
+		{
+			contract_value = detail.get("Contract");
+		}
+		bandwidth_capacity_value = "";
+		if(detail.get("Bandwidth_Capacity") == null)
+		{
+			bandwidth_capacity_value = "0";
+		}
+		else
+		{
+			bandwidth_capacity_value = detail.get("Bandwidth_Capacity");
+		}
+		bandwidth_value = "";
+		if(detail.get("Bandwidth") == null)
+		{
+			bandwidth_value = "0";
+		}
+		else
+		{
+			bandwidth_value = detail.get("Bandwidth");
+		}
+		bw_arc_value = "";
+		if(detail.get("BW_ARC") == null)
+		{
+			bw_arc_value = "0";
+		}
+		else
+		{
+			bw_arc_value = detail.get("BW_ARC");
+		}
+		bw_nrc_value = "";
+		if(detail.get("BW_NRC") == null)
+		{
+			bw_nrc_value = "0";
+		}
+		else
+		{
+			bw_nrc_value = detail.get("BW_NRC");
+		}
+		City = "";
+		if(detail.get("City") == null)
+		{
+			City = "";
+		}
+		else
+		{
+			City = detail.get("City");
+		}
+		tableRowother = "<tr><td>" + vendorName + "</td><td>" + contract_value + "</td><td>" + bandwidth_capacity_value + "</td><td>" + bandwidth_value + "</td><td>" + productName + "</td><td>" + bw_arc_value + "</td><td>" + bw_nrc_value + "</td><td>" + City + "</td>";
+		// Check if the product is Broadband and process accordingly
+		///////////////////////////////////////////////
+		if(counterxother > 0 && counterxpother > 0)
+		{
+			flagkother = false;
+			info 'sec';
+			if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					otherManagedServicesb = true;
+					otherslaServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					broadbandother = broadbandother + tableRowother + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					couother = couother + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(couother > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						otherManagedServicesb = true;
+						broadbandother = broadbandother + tableRowother + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						otherManagedServicesb = true;
+						managedServices = ifnull(managedServicesCharges,0);
+						broadbandother = broadbandother + tableRowother + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(couother > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						otherslaServicesb = true;
+						broadbandother = broadbandother + tableRowother + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						otherslaServicesb = true;
+						slaServices = ifnull(slaServicesCharges,0);
+						broadbandother = broadbandother + tableRowother + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					otherslaServicesb = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					otherManagedServicesb = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					broadbandother = broadbandother + tableRowother + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmmother > 0 || countssother > 0) && flagkother = true)
+		{
+			if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					otherManagedServicesb = true;
+					otherslaServicesb = true;
+					broadbandother = broadbandother + tableRowother + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					otherManagedServicesb = true;
+					otherslaServicesb = true;
+					broadbandother = broadbandother + tableRowother + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countssother >= 1)
+					{
+						otherManagedServicesb = true;
+						otherslaServicesb = true;
+						broadbandother = broadbandother + tableRowother + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						otherManagedServicesb = true;
+						otherslaServicesb = false;
+						broadbandother = broadbandother + tableRowother + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmother >= 1)
+					{
+						otherManagedServicesb = true;
+						otherslaServicesb = true;
+						broadbandother = broadbandother + tableRowother + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						otherManagedServicesb = false;
+						otherslaServicesb = true;
+						broadbandother = broadbandother + tableRowother + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					otherslaServicesb = true;
+					otherManagedServicesb = true;
+					broadbandother = broadbandother + tableRowother;
+				}
+			}
+		}
+		else
+		{
+			if(productName == "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				broadbandother = broadbandother + tableRowother;
+			}
+		}
+		////////////////////////////////////////////////////////////
+		if(counterxxother > 0 && counterxppother > 0)
+		{
+			flagkgother = false;
+			if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				if(Reference == 'M-S')
+				{
+					otherslaServices = true;
+					otherManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					otherCom = otherCom + tableRowother + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+					couother = couother + 1;
+				}
+				else if(Reference == 'M')
+				{
+					if(couother > 0)
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						otherManagedServices = true;
+						otherCom = otherCom + tableRowother + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+					else
+					{
+						managedServices = ifnull(managedServicesCharges,0);
+						otherManagedServices = true;
+						otherCom = otherCom + tableRowother + "<td>" + managedServices + "</td>" + "<td>0</td>";
+					}
+				}
+				else if(Reference == 'S')
+				{
+					if(couother > 0)
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						otherslaServices = true;
+						otherCom = otherCom + tableRowother + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+					else
+					{
+						slaServices = ifnull(slaServicesCharges,0);
+						otherslaServices = true;
+						otherCom = otherCom + tableRowother + "<td>0</td>" + "<td>" + slaServices + "</td>";
+					}
+				}
+				else
+				{
+					otherslaServices = true;
+					slaServices = ifnull(slaServicesCharges,0);
+					otherManagedServices = true;
+					managedServices = ifnull(managedServicesCharges,0);
+					otherCom = otherCom + tableRowother + "<td>" + slaServices + "</td>" + "<td>" + managedServices + "</td>";
+				}
+			}
+		}
+		else if((countmmxother > 0 || countssxother > 0) && flagkgother = true)
+		{
+			if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				if(managedServicesCharges != null && slaServicesCharges != null)
+				{
+					managedServices = ifnull(managedServicesCharges,0);
+					slaServices = ifnull(slaServicesCharges,0);
+					otherManagedServices = true;
+					otherslaServices = true;
+					otherCom = otherCom + tableRowother + "<td>" + managedServices + "</td>" + "<td>" + slaServices + "</td>";
+				}
+				else if(managedServicesCharges == null && slaServicesCharges == null)
+				{
+					otherManagedServices = true;
+					otherslaServices = true;
+					otherCom = otherCom + tableRowother + "<td>" + "0" + "</td>" + "<td>" + "0" + "</td>";
+				}
+				else if(managedServicesCharges != null && slaServicesCharges == null)
+				{
+					if(countssxother >= 1)
+					{
+						otherManagedServices = true;
+						otherslaServices = true;
+						otherCom = otherCom + tableRowother + "<td>" + managedServicesCharges + "</td>" + "<td>" + "0" + "</td>";
+					}
+					else
+					{
+						otherManagedServices = true;
+						otherslaServices = false;
+						otherCom = otherCom + tableRowother + "<td>" + managedServicesCharges + "</td>";
+					}
+				}
+				else if(managedServicesCharges == null && slaServicesCharges != null)
+				{
+					if(countmmxother >= 1)
+					{
+						otherManagedServices = true;
+						otherslaServices = true;
+						otherCom = otherCom + tableRowother + "<td>" + "0" + "</td>" + "<td>" + slaServicesCharges + "</td>";
+					}
+					else
+					{
+						otherManagedServices = false;
+						otherslaServices = true;
+						otherCom = otherCom + tableRowother + "<td>" + slaServicesCharges + "</td>";
+					}
+				}
+				else
+				{
+					otherslaServices = true;
+					otherManagedServices = true;
+					otherCom = otherCom + tableRowother;
+				}
+			}
+		}
+		else
+		{
+			if(productName != "Broadband" && vendorName != "TATA COMMUNICATIONS LIMITED" && vendorName != "BHARTI AIRTEL LIMITED" && vendorName != "TATA TELESERVICES LIMITED")
+			{
+				otherCom = otherCom + tableRowother;
+			}
+		}
+	}
+}
+// Process hardware specifications
+if(Hardware_specify != null && Hardware_specify != "")
+{
+	for each  hardwarespec in Hardware_specify
+	{
+		vend = hardwarespec.get("Vendor");
+		pro = hardwarespec.get("Product");
+		hardwarespecifyp = hardwarespecifyp + "<tr><td>" + vend.get("name") + "</td><td>" + pro.get("name") + "</td><td>" + hardwarespec.get("Quantities") + "</td><td>" + hardwarespec.get("Price_per_unit") + "</td><td>" + hardwarespec.get("Amount") + "</td></tr>";
+	}
+}
+///////////////////////////////////////
+// Construct the email body
+emailBody = "<html><body>";
+emailBody = emailBody + "<h4>Dear Customer, </h4>";
+emailBody = emailBody + "<p>Greetings from CLOUDINSTA24! CLOUDINSTA24  is keen to have an opportunity to propose enterprise-grade solutions such as Internet Leased Line (ILL) and Broadband. Our comprehensive suite of Enterprise products and services comprises the building blocks of innovative solutions designed to help you achieve more. Please go through the internet commercials below and let us know your preference to initiate the process along with vendor registration.</p>";
+counter = 0;
+if(TableTataCom != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Internet Leased Line Commercials - ILL - TATA COM</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(tataComManagedServices)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(tataComslaServices)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + TableTataCom + "</tbody></table>";
+}
+// Add Broadband table for TataCom if available
+if(broadbandTableTataCom != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Broadband Commercials for Tata COM</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(tataComManagedServicesb)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(tataComslaServicesb)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + broadbandTableTataCom + "</tbody></table>";
+}
+if(tslCom != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Internet Leased Line Commercials - ILL - TTSL</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(tslManagedServices)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(tslslaServices)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + tslCom + "</tbody></table>";
+}
+if(broadbandtsl != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Broadband Commercials for - TTSL</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(tslManagedServicesb)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(tslslaServicesb)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + broadbandtsl + "</tbody></table>";
+}
+if(airtelCom != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Internet Leased Line Commercials - ILL - Airtel</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(airtelManagedServices)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(airtelslaServices)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + airtelCom + "</tbody></table>";
+}
+if(broadbandairtel != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Broadband Commercials for Airtel</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(airtelManagedServicesb)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(airtelslaServicesb)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + broadbandairtel + "</tbody></table>";
+}
+if(otherCom != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ". Internet Leased Line Commercials - ILL - Other Services</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(otherManagedServices)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(otherslaServices)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + otherCom + "</tbody></table>";
+}
+if(broadbandother != "")
+{
+	counter = counter + 1;
+	emailBody = emailBody + "<h4>" + counter + ".Broadband Commercials for Other Services</h4>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color: #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Provider</th><th>Contract Month</th><th>Bandwidth Capacity</th><th>Bandwidth</th><th>Product Name</th><th>BW ARC</th><th>BW NRC</th><th>City</th>";
+	if(otherManagedServicesb)
+	{
+		emailBody = emailBody + "<th>Managed Services Charges</th>";
+	}
+	if(otherslaServicesb)
+	{
+		emailBody = emailBody + "<th>SLA</th>";
+	}
+	emailBody = emailBody + "</tr></thead><tbody style='text-align: center;'>" + broadbandother + "</tbody></table>";
+}
+/////////////
+// Similarly, update Airtel and Other Services sections
+if(hardwarespecifyp != "")
+{
+	emailBody = emailBody + "<h3>Hardware Commercials</h3>";
+	// 	emailBody = emailBody + "<p>The commercials given are very aggressive since we do have a mandate with coworking spaces and we can pass the benefit to our valuable customers.</p>";
+	emailBody = emailBody + "<table border='1' style='border-collapse:collapse; width: 100%;'>";
+	emailBody = emailBody + "<thead style='background-color:  #8bb6ac; color: white; text-align: center;'>";
+	emailBody = emailBody + "<tr><th>Vendors</th><th>Product Name</th><th>Quantity</th><th>Price Per Unit</th><th>Amount</th> </tr>";
+	emailBody = emailBody + "</thead><tbody style='text-align: center;'>" + hardwarespecifyp + "</tbody></table>";
+}
+emailBody = emailBody + "<p><strong>Please note:</strong>The installation of services is managed directly by the respective IPS (Airtel, TTSL, and TCL) with no third-party and other last mile carriers are involvement in the commissioning.</p>";
+// emailBody = emailBody + "<ul>";
+// emailBody = emailBody + "<li><strong>GST</strong> as applicable.</li>";
+// emailBody = emailBody + "<li><strong>Installation timeline</strong>: <ul>";
+// emailBody = emailBody + "<li>" + Installation_timeline + "</li>";
+// emailBody = emailBody + "</ul>
+//</li>"; 
+// emailBody = emailBody + "<li>Bharti Airtel Limited: 99%.</li>";
+// emailBody = emailBody + "<li>TCL: 99.95%.</li>";
+emailBody = emailBody + "</ul></li>";
+emailBody = emailBody + "<br>";
+if(ILL_Terms != null)
+{
+	emailBody = emailBody + "<h4>ILL Terms</h4>";
+	emailBody = emailBody + "<p>" + ILL_Terms + "</p>";
+}
+else
+{
+	// Handle the case when ILL_Terms is null
+	info "No ILL_Terms terms found.";
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+if(Boradband_Terms != null)
+{
+	emailBody = emailBody + "<h4>Broadband Terms</h4>";
+	emailBody = emailBody + "<p>" + Boradband_Terms + "</p>";
+}
+else
+{
+	// Handle the case when Boradband_Terms is null
+	info "No broadband terms found.";
+}
+emailBody = emailBody + "<br>";
+// emailBody = emailBody + "<ul>";
+// emailBody = emailBody + "<li><strong>GST</strong>  as applicable 18%.</li>";
+// emailBody = emailBody + "<li><strong>Installation timeline</strong> 5 days post order form signed or documentation.</li>";
+// emailBody = emailBody + "<li><strong>IP address</strong> 1200/- annually.</li>";
+// emailBody = emailBody + "<li><strong>IP address category</strong> Static IP only. </li>";
+// emailBody = emailBody + "<li><strong>Bridge mode timeline</strong> 3 days post installation and IP address delivery if required.</li>";
+// emailBody = emailBody + "<li><strong>SLA</strong> not applicable. </li>";
+// emailBody = emailBody + "</ul></li>";
+// emailBody = emailBody + "</ul>";
+//////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+emailBody = emailBody + "<p><strong>Need below information for your end:</strong></p>";
+emailBody = emailBody + "<ol>";
+emailBody = emailBody + "<li>IP Address - Static or Public?</li>";
+emailBody = emailBody + "<li>Delivery output - Ethernet or Optical?</li>";
+emailBody = emailBody + "<li>Site Readiness timeline?</li>";
+emailBody = emailBody + "<li>Required: Standard ILL or Managed ILL?</li>";
+emailBody = emailBody + "</ol>";
+emailBody = emailBody + "<p>Please feel free to connect for any clarifications. Looking forward to getting the opportunity and engaging with you.</p>";
+// Continue with other email content...
+emailBody = emailBody + "<br/><br/><br/>";
+emailBody = emailBody + "<p style='color: gray; margin: 0; padding: 0;'>Thanks and Regards, <br> " + creatorName + "</p>";
+//emailBody = emailBody + "<p style='color: gray;'>"+   +"<br>";
+////////////////////////////////////////////////////////////////
+// Assuming the response is already fetched
+response = zoho.crm.getRecords("users",1,200,{"type":"ActiveUsers"});
+// Loop through the response and extract ID and Full Name
+for each  user in response.get("users")
+{
+	user_id = user.get("id");
+	// Get the user's ID
+	full_name = user.get("full_name");
+	// Get the user's Full Name
+	info "User ID: " + user_id + " | Full Name: " + full_name;
+	// Correctly concatenate the image tag for each user
+	if(full_name == creatorName)
+	{
+		emailBody = emailBody + "<p style='text-align: center;'> <img src='https://raw.githubusercontent.com/dev-pro-07/imgtest/main/" + user_id + ".png' alt='Image Description' width='100%' style='max-width: 800px; height: auto; border: none;'></p>";
+	}
+	else
+	{
+	}
+}
+// 				https://raw.githubusercontent.com/dev-pro-07/imgtest/refs/heads/main/th.jpg
+// 				https://github.com/dev-pro-07/imgtest/blob/main/4cQGz9o.jpg?raw=true
+// 				https://github.com/dev-pro-07/imgtest/blob/main/OIP.jpg?raw=true
+/////////////////////////////////////////////////
+// emailBody = emailBody + "" + namex + "<br>";
+// emailBody = emailBody + "" + profilex + "<br>";
+// emailBody = emailBody + "" + emailx + "<br>";
+// emailBody = emailBody + "" + phonex + "</p>";
+/////////////
+// Close the main div
+emailBody = emailBody + "</body></html>";
+// Send the email using Zoho CRM's sendEmail function
+cx = "";
+if(creatorEmail == "hitesh.suryawanshi@cloudi-infra.com")
+{
+	cx = " pb@cloudi-infra.com";
+}
+else if(creatorEmail == " pb@cloudi-infra.com")
+{
+	cx = "avinash.kumar@cloudi-infra.com";
+}
+else
+{
+	cx = "avinash.kumar@cloudi-infra.com";
+}
+// sendmail
+// [
+// 	from :creatorEmail
+// 	to :Email
+// 	cc:cx
+// 	bcc :"s.singh@candour-pro.com","borse@candour-pro.com",creatorEmail
+// 	subject :"Proposal for Internet Leased Line (ILL) , Broadband Commercials & Other Services"
+// 	message :emailBody
+// ]
+//////////////////////////////////////////////////////////attachments////////
+//////////////////////////////////////////////////////////attachments////////
+header = Map();
+header.put("Accept","application/vnd.api+json");
+header.put("Authorization","Zoho-oauthtoken <your_access_token>");
+// Use your OAuth token here
+// Make the API request to Zoho WorkDrive
+response = invokeurl
+[
+	url :"https://www.zohoapis.com/workdrive/api/v1/files/m6pefd8d74538fdc947089a73ee94f9c974be/files?page%5Blimit%5D=50&page%5Boffset%5D=0"
+	type :GET
+	headers:header
+	connection:"drivex"
+];
+// Debugging: Log the response 
+// Check if response is successful
+if(response.containsKey("data"))
+{
+	files = response.get("data");
+	// Extract the files data from the response
+	tatacomstandard = "";
+	tatacompre = "";
+	tslstandard = "";
+	airteld = "";
+	// Process the files based on names
+	for each  file in files
+	{
+		file_name = file.get("attributes").get("name");
+		file_id = file.get("id");
+		if(file_name == "STDTTSL.TT.pdf")
+		{
+			file_download_url = file.get("attributes").get("download_url");
+			tslstandard = file_download_url;
+		}
+		else if(file_name == "STDTCL.TC.pdf")
+		{
+			file_download_url = file.get("attributes").get("download_url");
+			tatacomstandard = file_download_url;
+		}
+		else if(file_name == "TCLTC.pdf")
+		{
+			file_download_url = file.get("attributes").get("download_url");
+			tatacompre = file_download_url;
+		}
+		else if(file_name == "BHARTIAIRTEL.AI.pdf")
+		{
+			file_download_url = file.get("attributes").get("download_url");
+			airteld = file_download_url;
+		}
+		info "File Name: " + file_name + " " + file_download_url + ", File ID: " + file_id;
+	}
+}
+// Declare variables for file content (initialize as null)
+file_content = null;
+file_content2 = null;
+file_content3 = null;
+file_content4 = null;
+// Fetching file content based on proposal conditions
+ppptsl = false;
+countop = 0;
+countcom = 0;
+airtelcx = 0;
+// Loop through proposal details
+for each  detailx in proposalDetails
+{
+	productName = detailx.get("Product_Name").get("name");
+	vendors = detailx.get("Vendors");
+	vendorName = "";
+	if(vendors != null)
+	{
+		vendorName = vendors.get("name");
+	}
+	vendorName = vendorName.toUpperCase();
+	// Check conditions and set the flags
+	if((productName == "Standard ILL" || productName == "Std ILL" || productName == "Premium ILL") && vendorName == "TATA COMMUNICATIONS LIMITED")
+	{
+		ppptsl = true;
+		countop = countop + 1;
+	}
+	if(vendorName == "TATA TELESERVICES LIMITED")
+	{
+		ppptsl = true;
+		countcom = countcom + 1;
+	}
+	if(vendorName == "BHARTI AIRTEL LIMITED")
+	{
+		ppptsl = true;
+		airtelcx = airtelcx + 1;
+	}
+}
+// Fetch file content based on conditions
+if(countop > 0)
+{
+	for each  popp in proposalDetails
+	{
+		productName = popp.get("Product_Name").get("name");
+		vendors = popp.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		if((productName == "Standard ILL" || productName == "Std ILL") && vendorName == "TATA COMMUNICATIONS LIMITED")
+		{
+			// Fetch the file for Tata Communications Standard
+			file_content2 = invokeurl
+			[
+				url :tatacomstandard
+				type :GET
+				connection:"drivex"
+			];
+		}
+		else if(productName == "Premium ILL" && vendorName == "TATA COMMUNICATIONS LIMITED")
+		{
+			// Fetch the file for Tata Communications Premium
+			file_content3 = invokeurl
+			[
+				url :tatacompre
+				type :GET
+				connection:"drivex"
+			];
+		}
+	}
+}
+if(countcom > 0)
+{
+	for each  popp in proposalDetails
+	{
+		productName = popp.get("Product_Name").get("name");
+		vendors = popp.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		if(productName == "Standard ILL" && vendorName == "TATA TELESERVICES LIMITED")
+		{
+			// Fetch the file for Tata Teleservices Standard
+			file_content = invokeurl
+			[
+				url :tslstandard
+				type :GET
+				connection:"drivex"
+			];
+		}
+	}
+}
+if(airtelcx > 0)
+{
+	for each  popp in proposalDetails
+	{
+		productName = popp.get("Product_Name").get("name");
+		vendors = popp.get("Vendors");
+		vendorName = "";
+		if(vendors != null)
+		{
+			vendorName = vendors.get("name");
+		}
+		vendorName = vendorName.toUpperCase();
+		if(vendorName == "BHARTI AIRTEL LIMITED")
+		{
+			// Fetch the file for Airtel
+			file_content4 = invokeurl
+			[
+				url :airteld
+				type :GET
+				connection:"drivex"
+			];
+		}
+	}
+}
+// Ensure that null files are treated properly (empty files or 0 as default)
+file_content = ifnull(file_content,null);
+file_content2 = ifnull(file_content2,null);
+file_content3 = ifnull(file_content3,null);
+file_content4 = ifnull(file_content4,null);
+// Send email with multiple attachments 
+// Create an empty list to hold the attachments
+attachments = List();
+// Add valid attachments to the list
+if(file_content != null)
+{
+	attachments.add(file_content);
+}
+if(file_content2 != null)
+{
+	attachments.add(file_content2);
+}
+if(file_content3 != null)
+{
+	attachments.add(file_content3);
+}
+if(file_content4 != null)
+{
+	attachments.add(file_content4);
+}
+// Check if there are any attachments to send
+if(attachments.size() > 0)
+{
+	sendmail
+	[
+		from :creatorEmail
+		to :Email
+		cc:cx
+		bcc :"avinash.kumar@cloudi-infra.com",creatorEmail
+		subject :"Proposal for Internet Leased Line (ILL) , Broadband Commercials & Other Services"
+		message :emailBody
+		Attachments :file:attachments
+	]
+	// 	sendmail
+	// 	[
+	// 		from :creatorEmail
+	// 		to :"thomas.cyril@candour-pro.com"
+	// 		subject :"Proposal for Internet Leased Line (ILL), Broadband Commercials & Other Services"
+	// 		message :emailBody
+	// 		Attachments :file:attachments
+	// 	]
+}
+else
+{
+	sendmail
+	[
+		from :creatorEmail
+		to :Email
+		cc:cx
+		bcc :"avinash.kumar@cloudi-infra.com",creatorEmail
+		subject :"Proposal for Internet Leased Line (ILL) , Broadband Commercials & Other Services"
+		message :emailBody
+	]
+	// 	sendmail
+	// 	[
+	// 		from :creatorEmail
+	// 		to :"thomas.cyril@candour-pro.com"
+	// 		subject :"Proposal for Internet Leased Line (ILL), Broadband Commercials & Other Services"
+	// 		message :emailBody
+	// 		Attachments :file:attachments
+	// 	]
+}
+// Extract the download URL from the response
+// Parse the JSON response if it's in a string format
+// json_data = response.toMap();
+// // Access the download_url
+// download_url = json_data.get("data").get("attributes").get("download_url");
+// // Log the download URL
+// info download_url;
+// // Send the email with the file attachment
+// sendmail
+// [
+//     from : creatorEmail
+//     to : "thomas.cyril@candour-pro.com"
+//     subject : "Subject of the Email"
+//     message : "Please find the attached file from Zoho WorkDrive."
+//     attachments : file : download_url
+// ];
+// Assuming the response contains a file URL or necessary details
+// You may need to parse the response depending on its structure
+// fileUrl = response.get("data")[0].get("file_url"); // Adjust based on the actual response structure
+// info "hello get" + fileUrl ;
+// // Sending email with the file as an attachment
+// sendmail
+// [
+//     from : creatorEmail
+//     to : "thomas.cyril@candour-pro.com"
+//     subject : "Subject of the Email"
+//     message : "Please find the attached PDF file from Zoho WorkDrive."
+//     attachments : file : fileUrl
+// ];
+// Step 3: Check if the response contains file details
+// if(response != null)
+// {
+//     // Extract the file URL from the response (ensure the URL is accessible directly)
+//     fileUrl = response.get("url"); // Assuming the response contains the file URL
+//     info fileUrl; // Log the file URL to check the output
+//     // Step 4: Fetch the actual file and create a file object
+//     fileContent = invokeUrl 
+//     [
+//         url : fileUrl
+//         type : GET
+//         connection : "drive"  // Use the connection created for Zoho WorkDrive
+//     ];
+//     // Step 5: Send the email with the file attachment
+//     sendmail
+//     [
+//         from : creatorEmail
+//         to : "thomas.cyril@candour-pro.com"
+//         subject : "Subject of the Email"
+//         message : "Please find the attached PDF file from Zoho WorkDrive."
+//         attachments : file : fileContent
+//     ];
+// }
+// else
+// {
+//     info "Failed to fetch the file from Zoho WorkDrive.";
+// }
+
+
+Kisok
+
+Name	 	Value
+Meeting_rec	=  	
+Daily-Commitment (V3).Getallmeetings
+
+
+l1 = list();
+final = Meeting_rec.toList();
+// Loop through the final list and fetch each record
+for each  i in final
+{
+	var = zoho.crm.getRecordById("Events",i);
+	l1.add(var);
+	// Extracting required details from each record in l1
+	title = var.get("Event_Title");
+	host = var.get("Owner").get("name");
+	// Extract owner (host) name
+	description = var.get("Description");
+	location = var.get("Location");
+	// Assuming 'Location' is a field in the Event record
+	start_time = var.get("Start_DateTime");
+	end_time = var.get("End_DateTime");
+	related_to = var.get("Related_To");
+	// Assuming 'Related_To' is a field in the Event record
+	check_in_state = var.get("Check_In_State");
+	created_time = var.get("Created_Time");
+	modified_time = var.get("Modified_Time");
+	// Convert to Date object using toDate and format them
+	start_date = toDate(start_time,"yyyy-MM-dd'T'HH:mm:ss");
+	end_date = toDate(end_time,"yyyy-MM-dd'T'HH:mm:ss");
+	created_date = toDate(created_time,"yyyy-MM-dd'T'HH:mm:ss");
+	modified_date = toDate(modified_time,"yyyy-MM-dd'T'HH:mm:ss");
+	// Add IST offset (5 hours 30 minutes = 330 minutes) to the date
+	start_date_ist = start_date.addMinutes(330);
+	// Add 330 minutes to convert to IST
+	end_date_ist = end_date.addMinutes(330);
+	// Add 330 minutes to convert to IST
+	created_date_ist = created_date.addMinutes(330);
+	// Add 330 minutes to convert to IST
+	modified_date_ist = modified_date.addMinutes(330);
+	// Add 330 minutes to convert to IST
+	// Format the dates to the required format (dd-MM-yyyy HH:mm:ss)
+	formatted_start_time = start_date_ist.toString("dd-MM-yyyy HH:mm:ss");
+	formatted_end_time = end_date_ist.toString("dd-MM-yyyy HH:mm:ss");
+	formatted_created_time = created_date_ist.toString("dd-MM-yyyy HH:mm:ss");
+	formatted_modified_time = modified_date_ist.toString("dd-MM-yyyy HH:mm:ss");
+	// Construct plain text content
+	text_content = "[✅:- " + host + " 📝 Event Details :-  Host: " + host + ", ";
+	text_content = text_content + "Event Title: " + title + ", ";
+	// Check if description is null or empty, and set default text
+	if(description != null && description != "")
+	{
+		text_content = text_content + "Description: " + description + ", ";
+	}
+	else
+	{
+		text_content = text_content + "Description: Not Provided  , ";
+	}
+	// Check if location is null or empty, and set default text
+	if(location != null && location != "")
+	{
+		text_content = text_content + "Location: " + location + ", ";
+	}
+	else
+	{
+		text_content = text_content + "Location: Not Provided  , ";
+	}
+	// Add Start and End times in formatted IST
+	text_content = text_content + "Start Time: " + formatted_start_time + ", ";
+	text_content = text_content + "End Time: " + formatted_end_time + ", ";
+	// Check if related_to is null or empty, and set default text
+	if(related_to != null && related_to != "")
+	{
+		text_content = text_content + "Related To: " + related_to + ", ";
+	}
+	else
+	{
+		text_content = text_content + "Related To: Not Provided ,  ";
+	}
+	// Check if check_in_state is null or empty, and set default text
+	// 	if(check_in_state != null && check_in_state != "")
+	// 	{
+	// 		text_content = text_content + "Check-In State: " + check_in_state + ", ";
+	// 	}
+	// 	else
+	// 	{
+	// 		text_content = text_content + "Check-In State: Not Checked In,  ";
+	// 	}
+	// Add Created and Modified times in formatted IST
+	text_content = text_content + "Created Time: " + formatted_created_time + ", ";
+	text_content = text_content + "Modified Time: " + formatted_modified_time + " ]";
+	// Send the plain text content to Zoho Cliq channel
+	response = zoho.cliq.postToChannel("commitments",{"text":text_content},"cliq");
+	// Log to check the plain text content
+	info text_content;
+}
+
+
+
+
+rec_meet = Daily-ommitent-GeallMeetings
+
+
+
+// l2 = list();
+// final = rec_meet.toList();
+// today_date = zoho.currentdate.toString("yyyy-MM-dd");
+// for each  i in final
+// {
+// 	var = zoho.crm.getRecordById("Events",i);
+// 	l2.add(var);
+// 	owner_name = var.get("Owner").get("name");
+// 	start_date_utc = var.get("Start_DateTime");
+// 	end_date_utc = var.get("End_DateTime");
+// 	description = var.get("Description");
+// 	event_title = var.get("Event_Title");
+// 	modified_by = var.get("Modified_By").get("name");
+// 	created_by = var.get("Created_By").get("name");
+// 	location = var.get("Venue");
+// 	related_to = var.get("Related_To");
+// 	if(related_to != null && related_to.get("name") != null)
+// 	{
+// 		related_to_name = related_to.get("name");
+// 	}
+// 	else
+// 	{
+// 		related_to_name = "Not Provided";
+// 	}
+// 	start_date = start_date_utc.toDate();
+// 	end_date = end_date_utc.toDate();
+// 	start_date_ist = start_date.addMinutes(330);
+// 	// Convert to IST
+// 	end_date_ist = end_date.addMinutes(330);
+// 	// Convert to IST
+// 	start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm");
+// 	end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm");
+// 	commit_daily_data = Map();
+// 	meet_data_str = "Event Title: " + event_title + "\n" + "Owner Name: " + owner_name + "\n" + "Start Date: " + start_date_str + "\n" + "End Date: " + end_date_str + "\n" + "Description: " + description + "\n" + "Modified By: " + modified_by + "\n" + "Created By: " + created_by + "\n" + "Location: " + location + "\n" + "Related To: " + related_to_name + "\n" + "-------------------------------------------------------------------------------------------------\n";
+// 	commit_daily_data.put("Meeting_List",meet_data_str);
+// }
+commitment_data = zoho.crm.getRecords("Daily_Commitments",1,200,{"cvid":5271012000056659010});
+latest_record = "";
+latest_modified_time = "";
+for each  record in commitment_data
+{
+	modified_time = record.get("Modified_Time");
+	modified_time_obj = modified_time.toDate();
+	if(latest_modified_time == "" || modified_time_obj > latest_modified_time)
+	{
+		latest_modified_time = modified_time_obj;
+		latest_record = record;
+	}
+}
+current_date_time = zoho.currentdate.toString("yyyy-MM-dd") + "T" + zoho.currenttime.toString("HH:mm:ss") + "+05:30";
+info "Current DateTime: " + current_date_time;
+current_date = current_date_time.toString("yyyy-MM-dd");
+info "Current Date: " + current_date;
+if(latest_record != "")
+{
+	entry_ava = latest_record.get("Modified_Time").toString("yyyy-MM-dd");
+	info "Entry Modified Date: " + entry_ava;
+	entry_id = latest_record.get("id");
+	info "Entry ID: " + entry_id;
+	// If the record was modified today
+	if(current_date == entry_ava)
+	{
+		info "Updating existing record for today";
+		l2 = list();
+		final = rec_meet.toList();
+		for each  i in final
+		{
+			varx = zoho.crm.getRecordById("Events",i);
+			l2.add(varx);
+		}
+		call_data_str = "";
+		// Initialize an empty string to accumulate all the data
+		commit_daily_data = Map();
+		info l2;
+		counter = "";
+		counter = 1;
+		for each  Meeting in l2
+		{
+			// Fetching values from the Meeting JSON
+			Owner_value = Meeting.get("Owner").get("name");
+			State_date_value = Meeting.get("Start_DateTime");
+			End_date_value = Meeting.get("End_DateTime");
+			Description_value = Meeting.get("Description");
+			Event_value = Meeting.get("Event_Title");
+			Modified_by_value = Meeting.get("Modified_By").get("name");
+			Created_by_value = Meeting.get("Created_By").get("name");
+			Venue_type_value = Meeting.get("Venue");
+			related_to_s = Meeting.get("Related_To");
+			// Handling "Related_To" key if present
+			if(related_to_s != null && related_to_s.get("name") != null)
+			{
+				related_to_name = related_to_s.get("name");
+			}
+			else
+			{
+				related_to_name = "Not Provided";
+				// Default value when "Related_To" is not available
+			}
+			// Convert DateTime strings to Date objects and adjust for IST (UTC+5:30)
+			start_date_value = State_date_value.toDate();
+			end_date_value = End_date_value.toDate();
+			// Adjusting to IST (Indian Standard Time - UTC + 5:30)
+			start_date_ist = start_date_value.addMinutes(330);
+			// Adding 330 minutes to convert to IST
+			end_date_ist = end_date_value.addMinutes(330);
+			// Adding 330 minutes to convert to IST
+			// Formatting dates to "yyyy-MM-dd HH:mm" format
+			start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm");
+			end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm");
+			// Constructing the output string for each meeting
+			meeting_data = counter + ":- " + "[✅: Event Title: " + Event_value + ", " + "Owner Name: " + Owner_value + ", " + "Start Date: " + start_date_str + ", " + "End Date: " + end_date_str + ", " + "Description: " + Description_value + ", " + "Modified By: " + Modified_by_value + ", " + "Created By: " + Created_by_value + ", " + "Location: " + Venue_type_value + ", " + "Related To: " + related_to_name + " " + " ]-------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------------- --------------------------------------------------- -------------------------------------------------------------------- ---------------------------------------------------  ";
+			// Accumulate the meeting data into the call_data_str string
+			call_data_str = call_data_str + meeting_data;
+			counter = counter + 1;
+			// Concatenate each meeting's data
+		}
+		// Logging the accumulated string
+		info "test " + call_data_str;
+		// Prepare the map for update
+		commit_daily_data.put("Meeting_List",call_data_str);
+		// Update the record in Zoho CRM
+		update_response = zoho.crm.updateRecord("Daily_Commitments",entry_id,commit_daily_data);
+		info "Update Response: " + update_response;
+	}
+	else
+	{
+		info "Creating new record for today";
+		l2 = list();
+		final = rec_meet.toList();
+		for each  i in final
+		{
+			varx = zoho.crm.getRecordById("Events",i);
+			l2.add(varx);
+		}
+		call_data_str = "";
+		// Initialize an empty string to accumulate all the data
+		commit_daily_data = Map();
+		info l2;
+		counter = "";
+		counter = 1;
+		for each  Meeting in l2
+		{
+			// Fetching values from the Meeting JSON
+			Owner_value = Meeting.get("Owner").get("name");
+			State_date_value = Meeting.get("Start_DateTime");
+			End_date_value = Meeting.get("End_DateTime");
+			Description_value = Meeting.get("Description");
+			Event_value = Meeting.get("Event_Title");
+			Modified_by_value = Meeting.get("Modified_By").get("name");
+			Created_by_value = Meeting.get("Created_By").get("name");
+			Venue_type_value = Meeting.get("Venue");
+			related_to_s = Meeting.get("Related_To");
+			// Handling "Related_To" key if present
+			if(related_to_s != null && related_to_s.get("name") != null)
+			{
+				related_to_name = related_to_s.get("name");
+			}
+			else
+			{
+				related_to_name = "Not Provided";
+				// Default value when "Related_To" is not available
+			}
+			// Convert DateTime strings to Date objects and adjust for IST (UTC+5:30)
+			start_date_value = State_date_value.toDate();
+			end_date_value = End_date_value.toDate();
+			// Adjusting to IST (Indian Standard Time - UTC + 5:30)
+			start_date_ist = start_date_value.addMinutes(330);
+			// Adding 330 minutes to convert to IST
+			end_date_ist = end_date_value.addMinutes(330);
+			// Adding 330 minutes to convert to IST
+			// Formatting dates to "yyyy-MM-dd HH:mm" format
+			start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm");
+			end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm");
+			// Constructing the output string for each meeting
+			meeting_data = counter + ":- " + "[✅: Event Title: " + Event_value + ", " + "Owner Name: " + Owner_value + ", " + "Start Date: " + start_date_str + ", " + "End Date: " + end_date_str + ", " + "Description: " + Description_value + ", " + "Modified By: " + Modified_by_value + ", " + "Created By: " + Created_by_value + ", " + "Location: " + Venue_type_value + ", " + "Related To: " + related_to_name + ", " + " ]-------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------------- --------------------------------------------------- -------------------------------------------------------------------- ---------------------------------------------------  ";
+			// Accumulate the meeting data into the call_data_str string
+			call_data_str = call_data_str + meeting_data;
+			counter = counter + 1;
+			// Concatenate each meeting's data
+		}
+		// Logging the accumulated string
+		info "test " + call_data_str;
+		// Prepare the map for update
+		commit_daily_data.put("Meeting_List",call_data_str);
+		create_response = zoho.crm.createRecord("Daily_Commitments",commit_daily_data);
+		info "Create Response: " + create_response;
+	}
+}
+else
+{
+	info "No previous entry found, creating new record";
+	l2 = list();
+	final = rec_meet.toList();
+	for each  i in final
+	{
+		varx = zoho.crm.getRecordById("Events",i);
+		l2.add(varx);
+	}
+	call_data_str = "";
+	// Initialize an empty string to accumulate all the data
+	commit_daily_data = Map();
+	info l2;
+	counter = "";
+	counter = 1;
+	for each  Meeting in l2
+	{
+		// Fetching values from the Meeting JSON
+		Owner_value = Meeting.get("Owner").get("name");
+		State_date_value = Meeting.get("Start_DateTime");
+		End_date_value = Meeting.get("End_DateTime");
+		Description_value = Meeting.get("Description");
+		Event_value = Meeting.get("Event_Title");
+		Modified_by_value = Meeting.get("Modified_By").get("name");
+		Created_by_value = Meeting.get("Created_By").get("name");
+		Venue_type_value = Meeting.get("Venue");
+		related_to_s = Meeting.get("Related_To");
+		// Handling "Related_To" key if present
+		if(related_to_s != null && related_to_s.get("name") != null)
+		{
+			related_to_name = related_to_s.get("name");
+		}
+		else
+		{
+			related_to_name = "Not Provided";
+			// Default value when "Related_To" is not available
+		}
+		// Convert DateTime strings to Date objects and adjust for IST (UTC+5:30)
+		start_date_value = State_date_value.toDate();
+		end_date_value = End_date_value.toDate();
+		// Adjusting to IST (Indian Standard Time - UTC + 5:30)
+		start_date_ist = start_date_value.addMinutes(330);
+		// Adding 330 minutes to convert to IST
+		end_date_ist = end_date_value.addMinutes(330);
+		// Adding 330 minutes to convert to IST
+		// Formatting dates to "yyyy-MM-dd HH:mm" format
+		start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm");
+		end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm");
+		// Constructing the output string for each meeting
+		meeting_data = counter + ":- " + "[✅: Event Title: " + Event_value + ", " + "Owner Name: " + Owner_value + ", " + "Start Date: " + start_date_str + ", " + "End Date: " + end_date_str + ", " + "Description: " + Description_value + ", " + "Modified By: " + Modified_by_value + ", " + "Created By: " + Created_by_value + ", " + "Location: " + Venue_type_value + ", " + "Related To: " + related_to_name + ", " + " ]-------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------------- --------------------------------------------------- -------------------------------------------------------------------- ---------------------------------------------------  ";
+		// Accumulate the meeting data into the call_data_str string
+		call_data_str = call_data_str + meeting_data;
+		counter = counter + 1;
+		// Concatenate each meeting's data
+	}
+	// Logging the accumulated string
+	info "test " + call_data_str;
+	// Prepare the map for update
+	commit_daily_data.put("Meeting_List",call_data_str);
+	create_response = zoho.crm.createRecord("Daily_Commitments",commit_daily_data);
+	info "Create Response: " + create_response;
+}
+// l2 = list();
+// final = rec_meet.toList();
+// today_date = zoho.currentdate.toString("yyyy-MM-dd");
+// for each  i in final
+// {
+//     var = zoho.crm.getRecordById("Events", i);
+//     l2.add(var);
+//     owner_name = var.get("Owner").get("name");
+//     start_date_utc = var.get("Start_DateTime");
+//     end_date_utc = var.get("End_DateTime");
+//     description = var.get("Description");
+//     event_title = var.get("Event_Title");
+//     modified_by = var.get("Modified_By").get("name");
+//     created_by = var.get("Created_By").get("name");
+//     location = var.get("Venue");
+//     related_to = var.get("Related_To");
+//     if(related_to != null && related_to.get("name") != null)
+//     {
+//         related_to_name = related_to.get("name");
+//     }
+//     else
+//     {
+//         related_to_name = "Not Provided";
+//     }
+//     start_date = start_date_utc.toDate();
+//     end_date = end_date_utc.toDate();
+//     start_date_ist = start_date.addMinutes(330); // Convert to IST
+//     end_date_ist = end_date.addMinutes(330);     // Convert to IST
+//     start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm");
+//     end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm");
+//     commit_daily_data = Map();
+//     meet_data_str = "Event Title: " + event_title + "\n" +
+//                     "Owner Name: " + owner_name + "\n" +
+//                     "Start Date: " + start_date_str + "\n" +
+//                     "End Date: " + end_date_str + "\n" +
+//                     "Description: " + description + "\n" +
+//                     "Modified By: " + modified_by + "\n" +
+//                     "Created By: " + created_by + "\n" +
+//                     "Location: " + location + "\n" +
+//                     "Related To: " + related_to_name + "\n" +
+//                     "-------------------------------------------------------------------------------------------------\n";
+//     commit_daily_data.put("Meeting_List", meet_data_str);
+// }
+// commitment_data = zoho.crm.getRecords("Daily_Commitments",1,200,{"cvid":6098161000000987749});
+// //info commitment_data;
+// latest_record = "";
+// latest_modified_time = "";
+// for each  record in commitment_data
+// {
+// 	modified_time = record.get("Modified_Time").toDate();
+// 	info modified_time;
+// 	if(latest_modified_time == null || modified_time > latest_modified_time)
+// 	{
+// 		latest_record = record;
+// 		latest_modified_time = modified_time;
+// 	}
+// }
+//created_date = latest_record.get("Modified_Time").toDate().toString("yyyy-MM-dd");
+// record_id = latest_record.get("id");
+// info record_id;
+// today_date = zoho.currentdate.toString("yyyy-MM-dd");
+// if(created_date == today_date)
+// {
+//     // If today's data exists, update the record
+//    // update_response = zoho.crm.updateRecord("Daily_Commitments", record_id.toString(), commit_daily_data);
+// //    info update_response;
+// }
+// else
+// {
+//     // If no data for today, create a new record
+//  //   create_response = zoho.crm.createRecord("Daily_Commitments", commit_daily_data);
+//    // info create_response;
+// }
+// // Initialize an empty list
+// l2 = list();
+// final = rec_meet.toList(); // Get the list of meeting records
+// // Get today's date in the required format (yyyy-MM-dd)
+// today_date = zoho.currentdate.toString("yyyy-MM-dd"); // Get today's date in yyyy-MM-dd format
+// // Loop through each record in the final list
+// for each i in final
+// {
+//     // Fetch the event record by ID
+//     var = zoho.crm.getRecordById("Events", i);
+//     l2.add(var); // Add the fetched record to the list
+//     // Extracting the required fields from each record
+//     owner_name = var.get("Owner").get("name"); // Extract owner name
+//     start_date_utc = var.get("Start_DateTime"); // Extract start date in UTC
+//     end_date_utc = var.get("End_DateTime"); // Extract end date in UTC
+//     description = var.get("Description"); // Extract description
+//     event_title = var.get("Event_Title"); // Extract event title
+//     modified_by = var.get("Modified_By").get("name"); // Extract modified by (owner name)
+//     created_by = var.get("Created_By").get("name"); // Extract created by (owner name)
+//     location = var.get("Venue"); // Extract location (venue)
+//     // Fetch related_to (this field could be linked to another CRM record)
+//     related_to = var.get("Related_To");
+//     if(related_to != null && related_to.get("name") != null)
+//     {
+//         related_to_name = related_to.get("name"); // Get the related record name
+//     }
+//     else
+//     {
+//         related_to_name = "Not Provided"; // If no related record, set as "Not Provided"
+//     }
+//     // Manually adjust the UTC time by adding 5 hours and 30 minutes for IST
+//     start_date = start_date_utc.toDate(); // Convert start_date_utc to date object
+//     end_date = end_date_utc.toDate(); // Convert end_date_utc to date object
+//     // Add 330 minutes (5 hours 30 minutes) to the UTC time to convert to IST
+//     start_date_ist = start_date.addMinutes(330); // Add 330 minutes (5 hours 30 minutes)
+//     end_date_ist = end_date.addMinutes(330); // Add 330 minutes (5 hours 30 minutes)
+//     // Format the dates to a readable format (yyyy-MM-dd HH:mm)
+//     start_date_str = start_date_ist.toString("yyyy-MM-dd HH:mm"); // Format start date
+//     end_date_str = end_date_ist.toString("yyyy-MM-dd HH:mm"); // Format end date
+//     // Initialize the string for storing event details
+//     commit_daily_data = map();
+//     // Create a string with event details
+//     meet_data_str = "Event Title: " + event_title + "\n" +
+//                     "Owner Name: " + owner_name + "\n" +
+//                     "Start Date: " + start_date_str + "\n" +
+//                     "End Date: " + end_date_str + "\n" +
+//                     "Description: " + description + "\n" +
+//                     "Modified By: " + modified_by + "\n" +
+//                     "Created By: " + created_by + "\n" +
+//                     "Location: " + location + "\n" +
+//                     "Related To: " + related_to_name + "\n" +
+//                     "-------------------------------------------------------------------------------------------------\n";
+//     // Add the meeting details to the commit_daily_data map
+//     commit_daily_data.put("Meeting_List", meet_data_str);
+// commitment_data = zoho.crm.getRecords("Daily_Commitments",1,200,{"cvid":6098161000000987749}); 
+// info commitment_data ; 
+//     // Search for an existing record with today's date
+//     search_criteria = "(Date_Field:equals:" + today_date + ")";
+//     existing_record = zoho.crm.searchRecords("Daily_Commitments", search_criteria);
+//     // Output the result for debugging
+//     info existing_record;  // This will show the result of the search in the logs
+//     // If a record exists for today, update it; otherwise, create a new one
+//     if(existing_record.size() > 0)
+//     {
+//         // Record exists, update the record
+//         record_id = existing_record.get(0).get("id"); // Get the existing record ID
+//         update_response = zoho.crm.updateRecord("Daily_Commitments", record_id.toString(), commit_daily_data);
+//         info update_response; // Output the update response for debugging
+//     }
+//     else
+//     {
+//         // No record found for today, create a new record
+//         commit_daily_data.put("Owner", owner_name); // Add owner information to the new record
+//         create_response = zoho.crm.createRecord("Daily_Commitments", commit_daily_data);
+//         info create_response; // Output the create response for debugging
+//     }
+// }
+// l2 = list();
+// final = rec_meet.toList();  // Get the list of meeting records
+// // Loop through each record in the final list
+// for each i in final
+// {
+//     var = zoho.crm.getRecordById("Events", i);  // Fetch the event record by ID
+//     l2.add(var);  // Add the fetched record to the list
+//     // Extracting the required fields from each record
+//     owner_name = var.get("Owner").get("name");  // Extract owner name
+//     start_date = var.get("Start_DateTime");  // Extract start date
+//     end_date = var.get("End_DateTime");  // Extract end date
+//     description = var.get("Description");  // Extract description
+//     event_title = var.get("Event_Title");  // Extract event title
+//     modified_by = var.get("Modified_By").get("name");  // Extract modified by (owner name)
+//     created_by = var.get("Created_By").get("name");  // Extract created by (owner name)
+//     location = var.get("Venue");  // Extract location (venue)
+//     // Fetch related to (this field could be linked to another CRM record)
+//     related_to = var.get("Related_To");  // Assuming it is a reference to another record
+//     if(related_to != null && related_to.get("name") != null)
+//     {
+//         related_to_name = related_to.get("name");  // Get the related record name
+//     }
+//     else
+//     {
+//         related_to_name = "Not Provided";  // If no related record, set as "Not Provided"
+//     }
+// }
+// // for each  call in l2
+// // {
+// // 	subject_value = call.get("Event_Title");
+// // 	call_type_value = call.get("Call_Type");
+// // 	call_date_value = call.get("Call_Start_Time");
+// // 	// Add each call's data to the string
+// // 	call_data_str = call_data_str + "Subject: " + subject_value + "-";
+//  	meet_data_str =   "Event Title: " + event_title +
+//      "Owner Name: " + owner_name +
+//      "Start Date: " + start_date +
+//      "End Date: " + end_date +
+//      "Description: " + description +
+//      "Modified By: " + modified_by +
+//      "Created By: " + created_by +
+//      "Location: " + location +
+//      "Related To: " + related_to_name ;
+//  	meeting_data_str = meet_data_str + "-------------------------------------------------------------------------------------------------";
+// 	commit_daily_data.put("Meeting_List",meeting_data_str);
+// response = zoho.crm.createRecord("Daily_Commitments",commit_daily_data);
+// }
+//  commit_daily_data.put("Meeting_List",call_data_str)
+//response = zoho.crm.createRecord("Daily_Commitments",commit_daily_data);
+// info response;
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  GNU nano 7.2                                                                               /var/www/html/cacti/.htaccess                                                                                         
+RewriteEngine On
+
+# Rewrite requests like /cacti/sep to /cacti/view_tree.php?tree_anchor=sep
+RewriteRule ^(sep|lop|anchor3|kop)$ /cacti/view.php?tree_anchor=$1 [L,QSA]
+
+
+
+
+<?php
+// Get the 'tree_anchor' from the URL
+if (isset($_GET['tree_anchor'])) {
+    $tree_anchor = $_GET['tree_anchor'];
+} else {
+    echo "No tree anchor specified!";
+    exit();
+}
+
+// Define valid tree anchors and their corresponding tree numbers
+$valid_anchors = [
+    'sep' => 1,    // sep maps to tree 1
+    'lop' => 2,    // lop maps to tree 2
+    'anchor3' => 3, // anchor3 maps to tree 3
+    'kop' => 4     // kop maps to tree 4
+];
+
+// Validate the tree anchor and get the tree number
+if (!array_key_exists($tree_anchor, $valid_anchors)) {
+    echo "Invalid tree anchor!";
+    exit();
+}
+
+// Get the tree number corresponding to the tree anchor
+$tree_number = $valid_anchors[$tree_anchor];
+
+// Set the title dynamically based on the tree anchor
+$title = "Tree Anchor " . ucfirst($tree_anchor);
+
+// Base URL for the Cacti graph view
+$base_url = "http://3.110.114.89/cacti/view.php?action=tree&site_id=-1&host_id=-1&host_template_id=-1&hgd=&hyper=true";
+
+// Create the full URL for the iframe with the tree number
+$iframe_url = $base_url . "&node=" . urlencode("tree_anchor-$tree_number");
+
+// Output the HTML to display the iframe
+?>
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($title); ?></title>
+</head>
+<body>
+    <h1>Viewing: <?php echo htmlspecialchars($title); ?></h1>
+    <iframe src="<?php echo $iframe_url; ?>" width="100%" height="600px" frameborder="0"></iframe>
+</body>
+</html>
+
+
+
