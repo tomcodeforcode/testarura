@@ -1,0 +1,1014 @@
+// src/App.js
+
+import React from "react";
+
+import "./App.css";
+import EmployeeDetaily from "./components/EmployeeDetail";
+import EmployeeDetailxyz from "./components/EmployeeDetailxyz";
+
+import QrCode_admin_config from "./components/QrCode_admin_config";
+// import ContactPage from "./components/ContactPage"; // Page to show contact info
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/employee/:employee_id" element={<EmployeeDetaily />} />
+        <Route path="/employee/pf" element={<EmployeeDetailxyz />} />
+        <Route path="/QrCode_admin_config" element={<QrCode_admin_config />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+
+
+//////////////////////////
+
+import React, { useState } from "react";
+import QRCode from "react-qr-code"; // QR code component
+
+function App() {
+  const [eid, seteid] = useState(""); // Employee ID input state
+  const [qrCode, setQrCode] = useState(""); // Store generated QR code URL
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check if the employee ID is filled
+    if (!eid) {
+      alert("Please enter the Employee ID!");
+      return;
+    }
+
+    // Generate QR code URL using employee ID (eid)
+    const qrCodeURL = `http://3.110.170.126:3000/employee/${eid}`;
+
+    // Set the generated QR code URL
+    setQrCode(qrCodeURL);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-indigo-600 to-indigo-400 flex items-center justify-center py-6">
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+        <h1 className="text-4xl font-bold text-center text-indigo-800 mb-6">
+          Create QR Code
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Enter Employee ID"
+              value={eid}
+              onChange={(e) => seteid(e.target.value)}
+              className="w-full px-4 py-3 text-lg border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-3 bg-indigo-600 text-white text-lg font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Generate QR Code
+          </button>
+        </form>
+
+        {qrCode && (
+          <div className="mt-8 text-center">
+            <h2 className="text-2xl font-semibold text-indigo-800 mb-4">
+              Scan this QR Code
+            </h2>
+            <QRCode value={qrCode} size={200} />
+            <p className="mt-4 text-sm text-indigo-600">
+              Scan the QR code to visit the employee page with ID:{" "}
+              <strong>{eid}</strong>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+
+/////////////////////////////////////////////
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { HiBars3 } from "react-icons/hi2";
+import { IoMdCall } from "react-icons/io";
+import { IoMdMail, IoLogoWhatsapp, IoMdContact } from "react-icons/io";
+import { FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
+import { PiShareNetworkFill } from "react-icons/pi";
+import { RiGlobalLine } from "react-icons/ri";
+import About_cloudi from "./About_cloudi";
+import Review from "./Review";
+import Lisitngs_services from "./Lisitngs_services";
+import Why_ci from "./Why_ci";
+import Footer from "./Footer";
+import { useParams } from "react-router-dom";
+
+function ContactPage() {
+  const { employee_id } = useParams();
+  const [employee, setEmployee] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: "Cloudi Infra",
+          text: "Check out this amazing service!",
+          url: "https://cloudi-infra.com/", // Replace with your actual URL
+        })
+        .then(() => console.log("Shared successfully"))
+        .catch((error) => console.log("Error sharing", error));
+    } else {
+      alert("Your browser does not support the Web Share API");
+    }
+  };
+
+  useEffect(() => {
+    // Fetch employee details from API based on the Employee ID
+    axios
+      .get(`http://3.110.170.126:5000/employee/cloudinsta/${employee_id}`)
+      .then((response) => {
+        setEmployee(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(
+          err.response
+            ? err.response.data.error
+            : "Error fetching employee details"
+        );
+        setLoading(false);
+      });
+  }, [employee_id]);
+
+  const generateVCard = (contact) => {
+    const { FirstName, LastName, phone } = contact;
+    return `BEGIN:VCARD
+VERSION:3.0
+FN:${FirstName} ${LastName}
+TEL:${phone}
+END:VCARD`;
+  };
+
+  const downloadVCard = (contact) => {
+    const vCardData = generateVCard(contact);
+    const blob = new Blob([vCardData], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${contact.FirstName}_${contact.LastName}.vcf`; // Save file as <FirstName>_<LastName>.vcf
+    link.click();
+    URL.revokeObjectURL(url); // Clean up the URL object after download
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      <div className="min-h-screen bg-cover bg-center">
+        {/* Profile Header with Background Image */}
+        <div className="h-96 relative">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              zIndex: -1,
+            }}
+          >
+            <source src="/cl.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+
+          {/* Profile Photo */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+            <img
+              src="https://img.freepik.com/free-vector/floral-profile-picture-template_742173-4427.jpg?t=st=1736757974~exp=1736761574~hmac=76251e2ce210eb20b8784b8bf13c07a8c6d4c2dbbbb4e35f0d78974b6f1a1154&w=740"
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+              style={{
+                transform: "translateY(50%)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Profile Info Section */}
+        <div className="max-w-screen-xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className="p-6 rounded-lg">
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-3xl sm:text-4xl font-poppins font-semibold text-gray-700 pt-2">
+                  {employee.FirstName} {employee.LastName}
+                </h2>
+                <p className="text-lg sm:text-xl" style={{ color: "#8bb6ac" }}>
+                  <b>{employee.designation}</b>
+                </p>
+                <div className="space-x-6 space-y-4 text-center m-4">
+                  <button
+                    type="button"
+                    className="w-12 h-12 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#03a9f4] hover:bg-[#03a1f4] active:bg-[#03a9f4]"
+                  >
+                    <a
+                      href={`mailto:${employee.EmailID}`}
+                      className="text-white"
+                    >
+                      <IoMdMail className="text-white" />
+                    </a>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-12 h-12 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#0077b5] hover:bg-[#0055b5] active:bg-[#0077b5]"
+                  >
+                    <FaLinkedinIn className="text-white" />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-12 h-12 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#ea0065] hover:bg-[#ea0065d6] active:bg-[#ea0065]"
+                  >
+                    <a href={`tel:${employee.phone}`} className="text-white">
+                      <IoMdCall className="text-white" />
+                    </a>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-12 h-12 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#4caf50] hover:bg-[#4caf10] active:bg-[#4caf50]"
+                  >
+                    <a
+                      href={`https://wa.me/${employee.phone}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <IoLogoWhatsapp className="text-white" />
+                    </a>
+                  </button>
+                </div>
+                <div className="flex flex-col items-center">
+                  {/* Combined Add to Contact and Share Buttons */}
+                  <div className="flex w-full sm:w-1/2 lg:w-1/2 justify-center">
+                    <button
+                      type="button"
+                      style={{ backgroundColor: "#8bb6ac" }}
+                      className="px-5 py-3 inline-flex items-center justify-center rounded-lg text-white text-sm sm:text-base lg:text-lg tracking-wider font-semibold border-none outline-none bg-black hover:bg-green-500 active:bg-green-600 w-full sm:w-1/2 lg:w-1/2"
+                      onClick={() => downloadVCard(employee)}
+                    >
+                      <IoMdContact className="text-white font-bold text-2xl mr-2" />
+                      Add to Contact
+                    </button>
+                    <button
+                      type="button"
+                      className="px-5 py-3 inline-flex items-center justify-center rounded-lg text-white text-sm sm:text-base lg:text-lg tracking-wider font-semibold border-none outline-none bg-black hover:bg-green-500 active:bg-green-600 w-full sm:w-1/2 lg:w-1/2"
+                      onClick={() => handleShare()}
+                    >
+                      <PiShareNetworkFill
+                        className="font-bold text-2xl mr-2"
+                        style={{ color: "#8bb6ac" }}
+                      />
+                      Share
+                    </button>
+                  </div>
+                </div>
+
+                <a
+                  href="https://cloudi-infra.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <button
+                    type="button"
+                    className="px-5 py-3 inline-flex items-center justify-center rounded-lg text-white text-sm sm:text-base lg:text-lg tracking-wider font-semibold border-none outline-none bg-black hover:bg-[#333] active:bg-black w-full sm:w-1/2 lg:w-1/2 mt-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                  >
+                    <RiGlobalLine
+                      className="font-bold text-2xl mr-2"
+                      style={{ color: "#8bb6ac" }}
+                    />
+                    Website
+                  </button>
+                </a>
+
+                <div className="flex justify-center items-center my-24">
+                  <div className="relative w-full max-w-md">
+                    <hr className="border-t-2 border-gray-300 " />
+                    <div className="absolute left-1/2 transform -translate-x-1/2 -top-3 bg-white px-2 py-1 rounded-full">
+                      <span className="spinner-6 block w-8 h-8 rounded-full bg-black animate-ping"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {/* <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-center text-black dark:text-black mb-6 flex items-center justify-center">
+        About{" "}
+        <span
+          style={{
+            fontFamily: "Rostave",
+            color: "black",
+            display: "inline-flex",
+            alignItems: "center",
+            marginLeft: "8px",
+          }}
+        >
+          <img
+            src="/cloudww.png"
+            alt="CLOUDI logo"
+            style={{ height: "auto", width: "240px" }} // increase width as needed
+          />
+        </span>
+      </h1> */}
+
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-center text-black dark:text-black mb-6 flex items-center justify-center">
+                  <img
+                    src="/aboutcloudi.png"
+                    alt="CLOUDI logo"
+                    className="w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80" // Image width further increased for larger sizes
+                  />
+                </h1>
+
+                <section className="text-gray-600 body-font">
+                  <div className="container mx-auto px-5 pb-12 flex flex-col-reverse md:flex-row items-center">
+                    {/* Image Section */}
+                    <div className="lg:max-w-lg lg:w-full md:w-1/2 w-5/6 mb-10 md:mb-0">
+                      <img
+                        className="object-cover object-center rounded-lg"
+                        alt="hero"
+                        src="https://img.freepik.com/free-vector/illustration-business-people_53876-58975.jpg?t=st=1736832454~exp=1736836054~hmac=64b58b82ff4c3c1cd96a0055c23066b323e2fe54e0ac64af2622d039b5c92f98&w=740"
+                      />
+                    </div>
+
+                    {/* Text Section */}
+                    <div className="lg:flex-grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col items-center md:items-start text-center md:text-left">
+                      <h3 className="title-font sm:text-3xl text-2xl mb-4 font-medium text-gray-900 text-left">
+                        We help organizations rethink their IT{" "}
+                        <span style={{ color: "#8bb6ac" }} className="">
+                          &nbsp;strategies&nbsp;
+                        </span>
+                        and plan the technologies that best fit their unique
+                        business requirements.
+                      </h3>
+
+                      <p className="mb-8 leading-relaxed text-left">
+                        CloudInsta24 (Cloudi) Services Private Limited is a
+                        Strategic Managed Services Provider (MSP) distinct for
+                        its ability to merge its vision & think tank with that
+                        of its clients. We strive to understand your business
+                        thoroughly and offer exclusively tailored,
+                        comprehensive, and effective strategies for business
+                        consulting and IT services. Dedicated to serving
+                        businesses with innovative and simple business solutions
+                        that nurture profitability and drive enterprises
+                        forward, Cloudi is backed by innovative projects,
+                        abundant experience, and top-notch, talented employees.
+                        Cloudi is an award-winning Managed IT Service Provider,
+                        offering complete IT services and solutions for all
+                        small to large-sized enterprises.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <Review />
+
+              <div className="flex items-center justify-center my-4">
+                <hr className="flex-grow border-t-2 border-gray-300" />
+                <IoMdContact
+                  className="mx-4   text-3xl"
+                  style={{ color: "#8bb6ac" }}
+                />
+                <hr className="flex-grow border-t-2 border-gray-300" />
+              </div>
+              <br></br>
+              <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight   text-center">
+                About{" "}
+                <span class=" " style={{ color: "#FF6B6B" }}>
+                  <span></span>
+                </span>
+              </h1>
+
+              <div>
+                <br></br>
+
+                <section class="text-gray-600 body-font  text-center ">
+                  <div class="bg-gray-50  container mx-auto flex px-5 py-12 md:flex-row flex-col items-center">
+                    {/* frrr */}
+
+                    <div
+                      style={{ backgroundColor: "#8bb6ac" }}
+                      class="  rounded-lg p-6 shadow-md hover:scale-105 transition-all duration-500 mb-8"
+                    >
+                      <div class="lg:min-h-[100px]">
+                        <img
+                          src="https://img.freepik.com/free-vector/floral-profile-picture-template_742173-4427.jpg?t=st=1736757974~exp=1736761574~hmac=76251e2ce210eb20b8784b8bf13c07a8c6d4c2dbbbb4e35f0d78974b6f1a1154&w=740"
+                          class="w-full  h-64 rounded-lg inline-block"
+                        />
+                      </div>
+
+                      <div class="mt-6">
+                        <h4 class="text-white text-lg font-bold">
+                          {" "}
+                          {employee.FirstName} {employee.LastName}
+                        </h4>
+                        <p class="text-sm text-black mt-1">
+                          {employee.designation}
+                        </p>
+
+                        <div class="space-x-4 mt-6">
+                          <button
+                            type="button"
+                            class="w-7 h-7 inline-flex items-center justify-center rounded-full border-none outline-none bg-black hover:bg-gray-200"
+                          >
+                            <IoMdMail className="text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            class="w-7 h-7 inline-flex items-center justify-center rounded-full border-none outline-none  bg-black hover:bg-gray-200"
+                          >
+                            <FaLinkedinIn className="text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            class="w-7 h-7 inline-flex items-center justify-center rounded-full border-none outline-none  bg-black hover:bg-gray-200"
+                          >
+                            <IoLogoWhatsapp className="text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="lg:flex-grow md:w-1/2 lg:pl-24 md:pl-16 flex flex-col md:items-start md:text-left items-center text-center">
+                      <h5 class="mb-8 leading-relaxed  text-left text-lg">
+                        {employee.About}
+                      </h5>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <Lisitngs_services />
+              <Why_ci />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
+
+export default ContactPage;
+
+.................
+
+
+import React from "react";
+import { MdPsychology } from "react-icons/md";
+function WhyCI() {
+  return (
+    <div>
+      <br></br> <br></br>
+      <div className="flex items-center justify-center my-4 px-4 sm:px-8">
+        <hr className="flex-grow border-t-2 border-gray-300" />
+        <MdPsychology
+          className="mx-4  text-3xl sm:text-4xl"
+          style={{ color: "#8bb6ac" }}
+        />
+        <hr className="flex-grow border-t-2 border-gray-300" />
+      </div>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl  text-center lg:text-6xl font-extrabold leading-tight text-black dark:text-black pt-4">
+        Why customer choose <span style={{ color: "#8bb6ac" }}>Cloudi?</span>
+      </h1>
+      <section className="text-gray-600 body-font">
+        <div className="container px-1 py-6 mx-auto flex flex-wrap">
+          <div className="flex flex-wrap w-full">
+            {/* Image Section */}
+            <div className="lg:w-3/8 md:w-1/2 object-cover object-center rounded-lg md:mt-0 mt-12">
+              <img
+                className="w-full h-full object-contain rounded-lg"
+                src="/backchaq.webp"
+                alt="step"
+              />
+            </div>
+
+            {/* Steps Section */}
+            <div className="lg:w-5/8 md:w-1/2 md:pl-10 md:py-6">
+              {/* Step 1 */}
+              <div className="flex relative  pt-12">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full   inline-flex items-center justify-center text-white relative z-10">
+                  <img
+                    className="w-full h-full object-cover rounded-full"
+                    src="/bulb.png"
+                    alt="step"
+                  />
+                </div>
+
+                <div className="flex-grow pl-4">
+                  <h2 className="font-sans text-2xl sm:text-1xl text-xl text-gray-600  tracking-wide  ">
+                    <b>We believe in using technology for good.</b>
+                  </h2>
+
+                  <p className="leading-relaxed text-gray-700 mt-2  px-6 sm:px-8 md:px-10   rounded-lg ">
+                    As a leading Strategic Managed Service Provider (MSP) for
+                    ICT services, we have provided leading-edge technology to
+                    grow and enhance our client's systems security and enable
+                    their growth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex relative  ">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full   inline-flex items-center justify-center text-white relative z-10">
+                  <img
+                    className="w-full h-full object-cover rounded-full"
+                    src="/arrow.png"
+                    alt="step"
+                  />
+                </div>
+                <div className="flex-grow pl-4">
+                  <h2 className="font-sans text-2xl sm:text-1xl text-xl text-gray-600  tracking-wide mt-2 ">
+                    <b>We believe in using technology for good.</b>
+                  </h2>
+
+                  <p className="leading-relaxed text-gray-700 mt-2  px-6 sm:px-8 md:px-10   rounded-lg ">
+                    As a leading Strategic Managed Service Provider (MSP) for
+                    ICT services, we have provided leading-edge technology to
+                    grow and enhance our client's systems security and enable
+                    their growth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex relative  ">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full   inline-flex items-center justify-center text-white relative z-10">
+                  <img
+                    className="w-full h-full object-cover rounded-full"
+                    src="/nk.png"
+                    alt="step"
+                  />
+                </div>
+                <div className="flex-grow pl-4">
+                  <h2 className="font-sans text-2xl sm:text-1xl text-xl text-gray-600  tracking-wide mt-2   ">
+                    <b>We believe in using technology for good.</b>
+                  </h2>
+
+                  <p className="leading-relaxed text-gray-700 mt-2  px-6 sm:px-8 md:px-10   rounded-lg ">
+                    As a leading Strategic Managed Service Provider (MSP) for
+                    ICT services, we have provided leading-edge technology to
+                    grow and enhance our client's systems security and enable
+                    their growth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="flex relative  ">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full   inline-flex items-center justify-center text-white relative z-10">
+                  <img
+                    className="w-full h-full object-cover rounded-full"
+                    src="/conn.png"
+                    alt="step"
+                  />
+                </div>
+                <div className="flex-grow pl-4">
+                  <h2 className="font-sans text-2xl sm:text-1xl text-xl text-gray-600  tracking-wide mt-2  ">
+                    <b>We believe in using technology for good.</b>
+                  </h2>
+
+                  <p className="leading-relaxed text-gray-700 mt-2  px-6 sm:px-8 md:px-10   rounded-lg ">
+                    As a leading Strategic Managed Service Provider (MSP) for
+                    ICT services, we have provided leading-edge technology to
+                    grow and enhance our client's systems security and enable
+                    their growth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Finish Step */}
+              <div className="flex relative    ">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full   inline-flex items-center justify-center text-white relative z-10">
+                  <img
+                    className="w-full h-full object-cover rounded-full"
+                    src="/stat.png"
+                    alt="step"
+                  />
+                </div>
+                <div className="flex-grow pl-4">
+                  <h2 className="font-sans text-2xl sm:text-1xl text-xl text-gray-600  tracking-wide mt-2  ">
+                    <b>We believe in using technology for good.</b>
+                  </h2>
+
+                  <p className="leading-relaxed text-gray-700 mt-2  px-6 sm:px-8 md:px-10   rounded-lg ">
+                    As a leading Strategic Managed Service Provider (MSP) for
+                    ICT services, we have provided leading-edge technology to
+                    grow and enhance our client's systems security and enable
+                    their growth.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default WhyCI;
+
+
+
+..............
+
+import React from "react";
+
+function Footer() {
+  return (
+    <footer
+      style={{ backgroundColor: "#8bb6ac" }}
+      className="  text-white py-6 px-16 font-sans tracking-wide"
+    >
+      <div className="flex justify-between items-center max-lg:flex-col text-center flex-wrap gap-4">
+        <p className="text-[15px] leading-loose">
+          © Cloudi-infra. All rights reserved.
+        </p>
+
+        <ul className="flex space-x-6 gap-y-2 max-lg:justify-center flex-wrap">
+          <li>
+            <a
+              href="javascript:void(0)"
+              className="text-[15px] hover:text-white"
+            >
+              Privacy Policy
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="javascript:void(0)"
+              className="text-[15px] hover:text-white"
+            >
+              Contact
+            </a>
+          </li>
+        </ul>
+      </div>
+    </footer>
+  );
+}
+
+export default Footer;
+
+
+///////////////////////
+
+
+  GNU nano 8.3                                                                                          app.py                                                                                                     
+from flask import Flask, request, redirect, url_for, session, render_template
+import requests
+import time
+import json
+import os
+from dotenv import load_dotenv, set_key
+from flask import jsonify , session
+from flask_cors import CORS  # Import CORS
+import psycopg2
+import sqlite3
+
+app = Flask(__name__)
+CORS(app)
+app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
+
+# Load environment variables from .env file
+load_dotenv()
+
+#http://localhost:5000/callback
+
+
+DATABASE_URL = os.getenv('DATABASE_URL')  # Set this in your environment or .env file
+
+
+
+
+
+# Replace these with your actual Zoho details
+client_id = os.getenv('ZOHO_CLIENT_ID')
+client_secret = os.getenv('ZOHO_CLIENT_SECRET')
+redirect_uri = os.getenv('ZOHO_REDIRECT_URI')
+auth_url = 'https://accounts.zoho.com/oauth/v2/auth'
+token_url = 'https://accounts.zoho.com/oauth/v2/token'
+api_url = 'https://people.zoho.com/people/api/forms/employee/getRecords'
+
+
+@app.route('/')
+def index():
+    scope = 'ZOHOPEOPLE.forms.ALL'
+    auth_request_url = f"{auth_url}?scope={scope}&client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&access_type=offline"
+    return redirect(auth_request_url)
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    if not code:
+        return 'Error: No code found in the callback URL', 400
+
+    token_data = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+
+    response = requests.post(token_url, data=token_data)
+    response_json = response.json()
+
+
+    if response.status_code != 200:
+        return f"Error: {response_json.get('error', 'Unknown error')}", 400
+
+    access_token = response_json.get('access_token')
+    if not access_token:
+        return 'Error: Access token not found', 400
+
+
+    set_key('.env', 'ZOHO_ACCESS_TOKEN', access_token)
+
+
+
+  # Store the token in session for immediate use
+    session['access_token'] = access_token
+    return redirect(url_for('fetch_bulk_records'))
+
+
+# RDS credentials
+DB_HOST = "mydatabase.cb8y6gwu2jsy.ap-south-1.rds.amazonaws.com"
+DB_NAME = "myappdb"
+DB_USER = "adminHu"
+DB_PASS = "Tomcat749"  # Store securely in .env in production
+
+def get_connection():
+    return psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS
+    )
+
+
+
+@app.route('/create_employee_table', methods=['GET'])
+def create_employee_table():
+    try:
+        # Get database connection
+        conn = get_connection()
+        cur = conn.cursor()
+
+  # Create the table if it doesn't exist
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employee_table (
+                employee_id VARCHAR(255) PRIMARY KEY,
+                first_name VARCHAR(255) NOT NULL,
+                last_name VARCHAR(255) NOT NULL,
+                email_id VARCHAR(255) NOT NULL,
+                photo_url VARCHAR(512) DEFAULT 'default.jpg',
+                photo_download_url VARCHAR(512) DEFAULT 'default.jpg',
+                about TEXT DEFAULT 'N/A',
+                designation VARCHAR(255) DEFAULT 'N/A',
+                phone VARCHAR(20) DEFAULT 'N/A'
+            );
+        """)
+
+        # Alter the table to add the missing column if it doesn't exist
+        cur.execute("""
+            ALTER TABLE employee_table
+            ADD COLUMN IF NOT EXISTS photo_download_url VARCHAR(512) DEFAULT 'default.jpg';
+        """)
+
+        # Commit the transaction and close the connection
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'message': 'Employee table created or updated successfully.'}), 200
+
+    except Exception as e:
+        return jsonify({'message': f"Error creating table: {str(e)}"}), 500
+
+
+@app.route('/fetch_employee_data', methods=['GET'])
+def fetch_employee_data():
+    try:
+        # Get database connection
+        conn = get_connection()
+        cur = conn.cursor()
+
+        # Fetch all employee records from the employee_table
+        cur.execute("SELECT employee_id, first_name, last_name, email_id, photo_url, photo_download_url, about, designation, phone FROM employee_table")
+
+        # Fetch all results
+        rows = cur.fetchall()
+
+        # Create a list to hold the employee data
+        employee_data = []
+        for row in rows:
+            employee_data.append({
+                'EmployeeID': row[0],
+                'FirstName': row[1],
+                'LastName': row[2],
+                'EmailID': row[3],
+                'PhotoURL': row[4],
+                'PhotoDownloadURL': row[5],
+                'About': row[6],
+                'Designation': row[7],
+                'Phone': row[8]
+            })
+
+        # Close the cursor and connection
+        cur.close()
+        conn.close()
+
+        # Return the employee data as JSON
+        return jsonify(employee_data), 200
+
+    except Exception as e:
+        return jsonify({'message': f"Error fetching employee data: {str(e)}"}), 500
+
+
+
+@app.route('/fetch_bulk_records', methods=['GET'])
+def fetch_bulk_records():
+    access_token = session.get('access_token') or os.getenv('ZOHO_ACCESS_TOKEN')
+    if not access_token:
+        return jsonify({'message': 'Error: Access token not found'}), 400
+
+    headers = {'Authorization': f'Zoho-oauthtoken {access_token}', 'Content-Type': 'application/json'}
+    params = {'sIndex': 1, 'limit': 100}
+    all_records = []
+
+    while True:
+        response = requests.get(api_url, headers=headers, params=params)
+        response_json = response.json()
+
+        if response.status_code == 200:
+            employee_data = response_json.get("response", {}).get("result", [])
+
+            if not employee_data:
+                break  # No more records to fetch
+
+            all_records.extend(employee_data)
+            params['sIndex'] += 100  # Move to the next set of records
+        elif response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 60))
+            time.sleep(retry_after)
+        else:
+            return jsonify({'message': f"Error fetching records: {response_json}"}), 500
+
+    # Get DB connection
+    conn = get_connection()
+    if not conn:
+        return jsonify({'message': 'Error: Could not connect to the database'}), 500
+
+    cursor = conn.cursor()
+  # List to hold all formatted records to return later
+    formatted_records = []
+
+    # Process each record and insert or update the database
+    for record in all_records:
+        # Assuming each record has a nested 'records' field
+        for employee_key, employee_data_list in record.items():
+            if isinstance(employee_data_list, list):  # Check if the field contains a list
+                for employee_data in employee_data_list:
+                    # Extracting specific employee details
+                    employee_id = employee_data.get('EmployeeID', 'N/A')
+                    first_name = employee_data.get('FirstName', 'N/A')
+                    last_name = employee_data.get('LastName', 'N/A')
+                    email_id = employee_data.get('EmailID', 'N/A')
+                    photo_url = employee_data.get('Photo', 'default.jpg')
+                    photo_download_url = employee_data.get('Photo_downloadUrl', 'default.jpg')
+                    about = employee_data.get('AboutMe', 'N/A')
+                    designation = employee_data.get('Designation', 'N/A')
+                    phone = employee_data.get('Work_phone', 'N/A')
+
+                    # Prepare formatted record
+                    formatted_records.append({
+                        'EmployeeID': employee_id,
+                        'FirstName': first_name,
+                        'LastName': last_name,
+                        'EmailID': email_id,
+                        'PhotoURL': photo_url,
+                        'PhotoDownloadURL': photo_download_url,
+                        'About': about,
+                        'Designation': designation,
+                        'Phone': phone,
+                    })
+
+                    # Insert or update the employee record in the database
+
+
+    cursor.execute("""
+                        INSERT INTO employee_table (employee_id, first_name, last_name, email_id, photo_download_url, photo_url, about, designation, phone)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (employee_id) DO UPDATE SET
+                            first_name = EXCLUDED.first_name,
+                            last_name = EXCLUDED.last_name,
+                            email_id = EXCLUDED.email_id,
+                            photo_download_url = EXCLUDED.photo_download_url,
+                            photo_url = EXCLUDED.photo_url,
+                            about = EXCLUDED.about,
+                            designation = EXCLUDED.designation,
+                            phone = EXCLUDED.phone;
+                    """, (employee_id, first_name, last_name, email_id, photo_download_url, photo_url, about, designation, phone))
+
+                    # Commit the transaction after each employee is processed
+                    conn.commit()
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+    # Return the formatted records as JSON
+    return jsonify(formatted_records)
+
+@app.route('/employee/cloudinsta/<employee_id>', methods=['GET'])
+def fetch_employee_by_id(employee_id):
+    try:
+        # Get database connection
+        conn = get_connection()
+        cur = conn.cursor()
+
+        # Query to fetch a particular employee based on EmployeeID
+        cur.execute("""
+            SELECT employee_id, first_name, last_name, email_id, photo_url, photo_download_url, about, designation, phone
+            FROM employee_table
+            WHERE employee_id = %s;
+        """, (employee_id,))
+
+
+
+ # Fetch the result
+        row = cur.fetchone()
+
+        if row:
+            # Format the result as a dictionary
+            employee_data = {
+                'EmployeeID': row[0],
+                'FirstName': row[1],
+                'LastName': row[2],
+                'EmailID': row[3],
+                'PhotoURL': row[4],
+                'PhotoDownloadURL': row[5],
+                'About': row[6],
+                'Designation': row[7],
+                'Phone': row[8]
+            }
+
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
+            # Return the employee data as JSON
+            return jsonify(employee_data), 200
+        else:
+            # Employee not found
+            cur.close()
+            conn.close()
+            return jsonify({'message': 'Employee not found'}), 404
+
+    except Exception as e:
+        # Handle any errors
+        return jsonify({'message': f"Error fetching employee data: {str(e)}"}), 500
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+
+
+
+
