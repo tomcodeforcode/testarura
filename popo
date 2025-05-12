@@ -1,0 +1,1187 @@
+# from flask import Flask, session, redirect, request
+# import os
+# from zoho_auth import zoho_bp
+# from zoho_submit import bill_bp
+# from pdf_utils import upload_bp
+
+# app = Flask(__name__)
+# app.secret_key = os.urandom(24)
+# app.config['UPLOAD_FOLDER'] = 'uploads'
+# os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# # Register blueprints
+# app.register_blueprint(zoho_bp)
+# app.register_blueprint(upload_bp)
+# app.register_blueprint(bill_bp)
+
+# @app.route('/')
+# def index():
+#     if 'access_token' in session:
+#         return redirect('/index.html')
+#     return redirect('/login')
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+import os
+import re
+import fitz  # PyMuPDF
+import requests
+from flask import Flask, request, render_template_string, redirect, session
+from datetime import datetime
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Zoho OAuth and API details
+client_id = '1000.RNNP9NOM0X64VD7DQLPZ2K7F1IEJ5D'
+client_secret = '8c7335587624eeca7d80f631baecefdd1e0f432bf3'
+redirect_uri = 'https://zbooks-5u3q.onrender.com/callback'
+auth_url = 'https://accounts.zoho.com/oauth/v2/auth'
+token_url = 'https://accounts.zoho.com/oauth/v2/token'
+api_url = 'https://www.zohoapis.com/books/v3/bills'
+organization_id = '720853525'
+
+@app.route('/')
+def index():
+    if 'access_token' in session:
+        return redirect('/index.html')
+    return redirect('/login')
+
+@app.route('/login')
+def login():
+    scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.bills.All,ZohoBooks.fullaccess.all'
+    url = f"{auth_url}?scope={scope}&client_id={client_id}&response_type=code&redirect_uri={redirect_uri}"
+    return redirect(url)
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    if not code:
+        return 'Missing authorization code', 400
+
+    data = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+
+    response = requests.post(token_url, data=data).json()
+    if 'access_token' in response:
+        session['access_token'] = response['access_token']
+        return redirect('/')
+    return f"Error: {response}", 400
+
+
+
+#'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+@app.route('/index.html', methods=['GET', 'POST'])
+def form():
+    # Login system
+    if 'access_token' not in session:
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            if users.get(username) == password:
+                session['access_token'] = username
+                return redirect('/index.html')  # After login, redirect to the dashboard
+            else:
+                return '''
+                    <h2>Invalid credentials, please try again.</h2>
+                    <a href="/index.html">Back to login</a>
+                '''
+        
+        return '''
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>ZOHO Dashboard - Login</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f9;
+                        margin: 0;
+                    }
+                    .container {
+                        width: 100%;
+                        max-width: 400px;
+                        margin: 100px auto;
+                        background: #fff;
+                        padding: 30px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        border-radius: 8px;
+                    }
+                    h2 {
+                        text-align: center;
+                    }
+                    .form-group {
+                        margin-bottom: 15px;
+                    }
+                    input[type="text"], input[type="password"] {
+                        width: 100%;
+                        padding: 10px;
+                        margin: 5px 0;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                    }
+                    input[type="submit"] {
+                        width: 100%;
+                        padding: 10px;
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    }
+                    input[type="submit"]:hover {
+                        background-color: #45a049;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Login</h2>
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <input type="submit" value="Login">
+                    </form>
+                </div>
+            </body>
+            </html>
+        '''
+
+    # CRM Dashboard (Once logged in)
+    return '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CRM Dashboard</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+            }
+            .dashboard {
+                display: flex;
+                height: 100vh;
+            }
+            .sidebar {
+                width: 250px;
+                background-color: #2c3e50;
+                color: white;
+                padding: 20px;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar h2 {
+                color: #ecf0f1;
+            }
+            .sidebar ul {
+                padding: 0;
+                list-style-type: none;
+            }
+            .sidebar ul li {
+                margin: 15px 0;
+            }
+            .sidebar ul li a {
+                color: #ecf0f1;
+                text-decoration: none;
+                font-size: 18px;
+            }
+            .sidebar ul li a:hover {
+                color: #3498db;
+            }
+            .main-content {
+                flex: 1;
+                padding: 40px;
+                background-color: #ecf0f1;
+            }
+            .header {
+                background-color: #3498db;
+                color: white;
+                padding: 10px 20px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+            }
+            .upload-form {
+                background: #fff;
+                padding: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+            .upload-form input[type="file"] {
+                margin-bottom: 20px;
+            }
+            .upload-form input[type="submit"] {
+                background-color: #2ecc71;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .upload-form input[type="submit"]:hover {
+                background-color: #27ae60;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="dashboard">
+            <div class="sidebar">
+                <h2>Zoho-Dashboard</h2>
+                <ul>
+              <!--      # <li><a href="#">Home</a></li>
+                    # <li><a href="#">Customers</a></li>
+                    # <li><a href="#">Reports</a></li>
+                    # <li><a href="#">Settings</a></li>
+                    # <li><a href="#">Logout</a></li>  -->
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="header">
+                    <h3>Welcome to your Zoho Books Dashboard </h3>
+                </div>
+                <div class="upload-form">
+                    <h2>Upload PDFs</h2>
+                    <form method="POST" action="/upload_pdf" enctype="multipart/form-data">
+                        <input type="file" name="file" multiple required>
+                        <input type="submit" value="Upload PDFs">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+# @app.route('/index.html')
+# def form():
+#     if 'access_token' not in session:
+#         return redirect('/login')
+
+#     return '''
+#     <!DOCTYPE html>
+#     <html>
+#     <head><title>Upload PDFs</title></head>
+#     <body>
+#         <form method="POST" action="/upload_pdf" enctype="multipart/form-data">
+#             <input type="file" name="file" multiple required>
+#             <input type="submit" value="Upload PDFs">
+#         </form>
+#     </body>
+#     </html>
+#     '''
+
+
+
+@app.route('/upload_pdf', methods=['POST'])
+def upload_pdf():
+    files = request.files.getlist('file')
+    if not files or files[0].filename == '':
+        return "No files uploaded", 400
+
+    all_data = []
+    for file in files:
+        path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(path)
+        text = extract_text_from_pdf(path)
+        data = process_pdf_to_json(text)
+        all_data.append(data)
+
+    return render_template_string("""
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #fafafa;
+        }
+
+        legend {
+            font-weight: bold;
+            padding: 0 10px;
+            color: #2c3e50;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+      input[type="text"], input[type="date"], select {
+    padding: 8px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .remove-button {
+            background-color: #e74c3c;
+        }
+
+        .remove-button:hover {
+            background-color: #c0392b;
+        }
+        .max{
+          border: 5px solid black;
+        }
+
+        input[type="submit"] {
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 30px auto 0;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #27ae60;
+        }
+
+    </style>
+</head>
+<body>
+<div id="confirmationModal" style="display:none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
+     background-color: rgba(0,0,0,0.5);">
+    <div style="background-color: #fff; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 400px; border-radius: 8px; text-align: center;">
+        <h3>Are you sure you want to submit all data to Zoho?</h3>
+        <p>Please review everything before final submission.</p>
+        <button onclick="submitForm()" style="background-color: #2ecc71; color: white; padding: 10px 20px; margin-right: 10px; border: none; border-radius: 4px;">✅ Final Submit</button>
+        <button onclick="hideConfirmation()" style="background-color: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 4px;">👁 Review</button>
+    </div>
+</div>
+
+    <form method="POST" action="/submit_to_zoho_batch">
+        <script>
+        function addItemRow(billIndex) {
+            const table = document.getElementById(`item_table_${billIndex}`);
+            const rowCount = table.rows.length;
+            const newRow = table.insertRow(-1);
+            newRow.innerHTML = `
+                <td><input type="text" name="item_desc_${billIndex}_${rowCount}" placeholder="Description"></td>
+                <td><input type="text" name="item_rate_${billIndex}_${rowCount}" placeholder="Rate"></td>
+                <td>
+                    <select name="item_tax_${billIndex}_${rowCount}">
+                        <option value="2333719000000069428">18% Tax</option>
+                        <option value="45353">12% Tax</option>
+                        <option value="45484">5% Tax</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="item_${billIndex}_${rowCount}">
+                        <option value="2333719000000085007">Stap Ill</option>
+                        <option value="44496225">Stap II</option>
+                        <option value="44496226">Stap III</option>
+                    </select>
+                </td>
+                <td><button type="button" class="remove-button" onclick="removeItemRow(this)">❌ Remove</button></td>
+            `;
+            document.getElementById(`item_count_${billIndex}`).value = rowCount + 1;
+        }
+
+        function removeItemRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        function addBandwidthRow(billIndex) {
+            const table = document.getElementById(`bandwidth_table_${billIndex}`);
+            const rowCount = table.rows.length;
+            const newRow = table.insertRow(-1);
+            newRow.innerHTML = `
+                <td>Bandwidth ${rowCount}</td>
+                <td><input type="text" name="bill_${billIndex}_bandwidth_desc_${rowCount}" placeholder="Description"></td>
+                <td><input type="text" name="bill_${billIndex}_bandwidth_rate_${rowCount}" placeholder="Rate"></td>
+            `;
+            document.getElementById(`bill_${billIndex}_bandwidth_count`).value = rowCount + 1;
+        }
+
+        function addMplsRow(billIndex) {
+            const table = document.getElementById(`mpls_table_${billIndex}`);
+            const rowCount = table.rows.length;
+            const newRow = table.insertRow(-1);
+            newRow.innerHTML = `
+                <td>MPLS ${rowCount}</td>
+                <td><input type="text" name="bill_${billIndex}_mpls_desc_${rowCount}" placeholder="Description"></td>
+                <td><input type="text" name="bill_${billIndex}_mpls_rate_${rowCount}" placeholder="Rate"></td>
+            `;
+            document.getElementById(`bill_${billIndex}_mpls_count`).value = rowCount + 1;
+        }
+         function addBandwidthRow(billIndex) {
+        const table = document.getElementById(`bandwidth_table_${billIndex}`);
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(-1);
+        newRow.innerHTML = `
+            <td>Bandwidth ${rowCount}</td>
+            <td><input type="text" name="bill_${billIndex}_bandwidth_desc_${rowCount}" placeholder="Description"></td>
+            <td><input type="text" name="bill_${billIndex}_bandwidth_rate_${rowCount}" placeholder="Rate"></td>
+            <td><button type="button" class="remove-button" onclick="removeItemRow(this)">❌ Remove</button></td>
+        `;
+        document.getElementById(`bill_${billIndex}_bandwidth_count`).value = rowCount + 1;
+    }
+
+    function addMplsRow(billIndex) {
+        const table = document.getElementById(`mpls_table_${billIndex}`);
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow(-1);
+        newRow.innerHTML = `
+            <td>MPLS ${rowCount}</td>
+            <td><input type="text" name="bill_${billIndex}_mpls_desc_${rowCount}" placeholder="Description"></td>
+            <td><input type="text" name="bill_${billIndex}_mpls_rate_${rowCount}" placeholder="Rate"></td>
+            <td><button type="button" class="remove-button" onclick="removeItemRow(this)">❌ Remove</button></td>
+        `;
+        document.getElementById(`bill_${billIndex}_mpls_count`).value = rowCount + 1;
+    }
+
+    function removeItemRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+    }
+
+    function showConfirmation() {
+    document.getElementById("confirmationModal").style.display = "block";
+}
+
+function hideConfirmation() {
+    document.getElementById("confirmationModal").style.display = "none";
+}
+
+function submitForm() {
+    document.querySelector("form").submit();
+}
+        </script>
+<h1>Vendor Portal</h1>
+        {% for bill in data %}
+            {% set idx = loop.index0 %}
+            <div class="max">
+           <fieldset>
+    <br/>
+    <legend>🧾 Bill {{ loop.index }}</legend>
+    <label for="bill_{{ idx }}_Circuit_ID">Circuit ID🔌</label>
+<input type="text" id="bill_{{ idx }}_Circuit_ID" name="bill_{{ idx }}_Circuit_ID" value="{{ bill.get('Circuit_ID', '') }}" required>
+ <label for="bill_{{ idx }}_account_no">Account Number</label>
+<input type="text" id="bill_{{ idx }}_account_no" name="bill_{{ idx }}_account_no" value="{{ bill.get('account_no', '') }}" required>
+
+ <label for="bill_{{ idx }}_gst_no">GST Number</label>
+<input type="text" id="bill_{{ idx }}_gst_no" name="bill_{{ idx }}_gst_no" value="{{ bill.get('gst_no', '') }}" required readonly>
+
+
+
+
+<label for="bill_{{ idx }}_source_of_supply">Source of supply</label>
+<input type="text" id="bill_{{ idx }}_source_of_supply" name="bill_{{ idx }}_source_of_supply" value="{{ bill.get('source_of_supply', '') }}" required readonly>
+<label for="bill_{{ idx }}_destination_of_supply">Destination of supply</label>
+<input type="text" id="bill_{{ idx }}_destination_of_supply" name="bill_{{ idx }}_destination_of_supply" value="{{ bill.get('destination_of_supply', '') }}" required readonly>
+<label for="bill_{{ idx }}_branch_id">Branch ID</label>
+<input type="text" id="bill_{{ idx }}_branch_id" name="bill_{{ idx }}_branch_id" value="{{ bill.get('branch_id', '') }}" required readonly>
+<label for="bill_{{ idx }}_branch_name">Branch Name</label>
+<input type="text" id="bill_{{ idx }}_branch_name" name="bill_{{ idx }}_branch_name" value="{{ bill.get('branch_name', '') }}" required readonly>
+
+
+
+
+ <label for="bill_{{ idx }}_Installation_Address">Installation Address Line 1 </label>
+<input type="text" id="bill_{{ idx }}_Installation_Address" name="bill_{{ idx }}_Installation_Address" value="{{ bill.get('Installation_Address', '') }}" required>
+
+ <label for="bill_{{ idx }}_Installation_Address_1">Installation Address Line 2</label>
+<input type="text" id="bill_{{ idx }}_Installation_Address_1" name="bill_{{ idx }}_Installation_Address_1" value="{{ bill.get('Installation_Address_1', '') }}" required>
+
+
+ <label for="bill_{{ idx }}_Installation_Address_2">Installation Address Line 3</label>
+<input type="text" id="bill_{{ idx }}_Installation_Address_2" name="bill_{{ idx }}_Installation_Address_2" value="{{ bill.get('Installation_Address_2', '') }}" required>
+
+
+
+    {% for key, value in bill.items() %}
+        {% if key == 'bandwidth_adv_charges' and value and value | length > 0 %}
+            <label>📶 Bandwidth Advance Charges</label>
+            <table id="bandwidth_table_{{ idx }}">
+                <tr><th>#</th><th>Description</th><th>Rate</th><th>Action</th></tr>
+                {% for item in value %}
+                    <tr>
+                        <td>Bandwidth {{ loop.index }}</td>
+<td>
+  <textarea name="bill_{{ idx }}_bandwidth_desc_{{ loop.index0 }}" rows="3" cols="50">
+Quarterly Advance Period: {{ item.start_date }} to {{ item.end_date }}
+{% if bill.get('Annual_Rental_charges') %}Annual Rental Charges: {{ bill.get('Annual_Rental_charges') }}
+{% endif %}{% if bill.get('Bandwidth') %}Bandwidth: {{ bill.get('Bandwidth') }}
+{% endif %}
+  </textarea>
+</td>
+
+
+                        <td><input type="text" name="bill_{{ idx }}_bandwidth_rate_{{ loop.index0 }}" value="{{ item.amount }}"></td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <input type="hidden" id="bill_{{ idx }}_bandwidth_count" name="bill_{{ idx }}_bandwidth_count" value="{{ value|length }}">
+            <button type="button" onclick="addBandwidthRow({{ idx }})">➕ Add More Bandwidth</button>
+
+        {% elif key == 'mpls_adv_charges' and value and value | length > 0 %}
+            <label>🛜 MPLS Advance Charges</label>
+            <table id="mpls_table_{{ idx }}">
+                <tr><th>#</th><th>Description</th><th>Rate</th><th>Action</th></tr>
+                {% for item in value %}
+                    <tr>
+                        <td>MPLS {{ loop.index }}</td>
+          <td>
+  <input type="text" name="bill_{{ idx }}_mpls_desc_{{ loop.index0 }}"
+         value="Quarterly Advance Period: {{ item.start_date }} to {{ item.end_date }}">
+</td>
+
+ <td><input type="text" name="bill_{{ idx }}_mpls_rate_{{ loop.index0 }}" value="{{ item.amount }}"></td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <input type="hidden" id="bill_{{ idx }}_mpls_count" name="bill_{{ idx }}_mpls_count" value="{{ value|length }}">
+            <button type="button" onclick="addMplsRow({{ idx }})">➕ Add More MPLS</button>
+
+       {% elif key not in ['bandwidth_adv_charges', 'mpls_adv_charges' ,'Circuit_ID' ,'account_no' ,'Installation_Address' , 'Installation_Address_1' , 'Installation_Address_2','gst_no','source_of_supply','destination_of_supply','branch_id','branch_name'] %}
+    <label>{{ key.replace('_', ' ').capitalize() }}</label>
+    {% if key in ['Bill_Date', 'Due_Date', 'Installation_Date'] %}
+        {% set parts = value.split('-') %}
+        {% set months = {'Jan': '01','Feb': '02','Mar': '03','Apr': '04','May': '05','Jun': '06','Jul': '07','Aug': '08','Sep': '09','Oct': '10','Nov': '11','Dec': '12'} %}
+        {% if parts|length == 3 and parts[1] in months %}
+            {% set iso_date = '20' ~ parts[2] ~ '-' ~ months[parts[1]] ~ '-' ~ parts[0].zfill(2) %}
+        {% else %}
+            {% set iso_date = '2025-04-01' %}
+        {% endif %}
+        <input type="date" name="bill_{{ idx }}_{{ key }}" value="{{ iso_date }}">
+    {% else %}
+        <input type="text" name="bill_{{ idx }}_{{ key }}" value="{{ value }}">
+    {% endif %}
+
+        {% endif %}
+    {% endfor %}
+</fieldset>
+
+            
+
+            <fieldset>
+                <legend>🧾 Item List</legend>
+                <table id="item_table_{{ idx }}">
+                    <tr>
+                        <th>Description</th>
+                        <th>Rate</th>
+                        <th>Tax</th>
+                        <th>Item</th>
+                        <th>Action</th>
+                    </tr>
+                </table>
+                <button type="button" onclick="addItemRow({{ idx }})">➕ Add Item</button>
+                <input type="hidden" id="item_count_{{ idx }}" name="item_count_{{ idx }}" value="0">
+            </fieldset>
+            </div>
+             <br/>
+        {% endfor %}
+
+        <input type="hidden" name="count" value="{{ data | length }}">
+       <button type="button" onclick="showConfirmation()">✅ Submit All to Zoho</button>
+
+    </form>
+</body>
+</html>
+""", data=all_data)
+
+
+
+
+
+@app.route('/submit_to_zoho_batch', methods=['POST'])
+def submit_to_zoho_batch():
+    if 'access_token' not in session:
+        return redirect('/login')
+
+    access_token = session['access_token']
+    count = int(request.form.get('count', 0))
+    responses = []
+
+    for i in range(count):
+        bill_data = {
+            key.replace(f"bill_{i}_", ""): request.form[key]
+            for key in request.form
+            if key.startswith(f"bill_{i}_") and not key.endswith("_count")
+        }
+        line_items = []
+        
+        annual_recurring_charges = bill_data.get("Annual_Rental_charges") 
+        bandwidth_c = bill_data.get("Bandwidth")
+ 
+
+                
+                # ✅ Bandwidth Charges
+        bandwidth_count = int(request.form.get(f"bill_{i}_bandwidth_count", 0))
+        for j in range(bandwidth_count):
+                desc = request.form.get(f"bill_{i}_bandwidth_desc_{j}", "No description")
+                rate = request.form.get(f"bill_{i}_bandwidth_rate_{j}", "0").replace(",", "")
+
+                if desc != "No description" and rate != "0":
+                    line_items.append({
+                        "itc_eligibility": "ineligible_others",
+                        "tax_id": "2333719000000069428",
+                        "item_id": "2333719000000085007",
+                        "description": desc,
+                        "rate": rate
+                    })
+
+        # ✅ MPLS Charges
+        mpls_count = int(request.form.get(f"bill_{i}_mpls_count", 0))
+        for j in range(mpls_count):
+                desc = request.form.get(f"bill_{i}_mpls_desc_{j}", "No description")
+                rate = request.form.get(f"bill_{i}_mpls_rate_{j}", "0").replace(",", "")
+
+                if desc != "No description" and rate != "0":
+                    line_items.append({
+                        "itc_eligibility": "ineligible_others",
+                        "tax_id": "2333719000000069428",  # Replace if needed
+                        "item_id": "2333719000030710135",  # MPLS item ID
+                        "description": desc,
+                        "rate": rate,
+                    })
+
+       
+        
+
+        # ✅ Item Charges
+        item_count = int(request.form.get(f"item_count_{i}", 0))
+        for j in range(item_count):
+            desc = request.form.get(f"item_desc_{i}_{j}", "No description")
+            rate = request.form.get(f"item_rate_{i}_{j}", "0").replace(",", "")
+            tax = request.form.get(f"item_tax_{i}_{j}")
+            item = request.form.get(f"item_{i}_{j}")
+
+            if desc != "No description" and rate != "0" and tax and item:
+                line_items.append({
+                    "itc_eligibility": "ineligible_others",
+                    "tax_id": tax,
+                    "item_id": item,
+                    "description": desc,
+                    "rate": rate
+                })
+
+        # ✅ Bill Metadata
+        bill_date = format_date(bill_data.get("Bill_Date", "2025-04-01"))
+        due_date = format_date(bill_data.get("Due_Date"))
+
+
+        print("lettttttttttttttttttttttttt",desc)
+
+
+        bill_date_str = bill_data.get("Bill_Date")
+        due_date_str = bill_data.get("Due_Date")
+
+        # Convert date strings to datetime objects for comparison and calculation
+        bill_datex = datetime.strptime(bill_date_str, "%Y-%m-%d") if bill_date_str else None
+        due_datex = datetime.strptime(due_date_str, "%Y-%m-%d") if due_date_str else None
+
+        # Initialize the payment terms and label
+        payment_terms = 0
+        payment_terms_label = "Due on Receipt"
+       
+        if bill_datex and due_datex:
+          if bill_datex == due_datex:
+            payment_terms = 0
+            payment_terms_label = "Due on Receipt"
+          else:
+            # Calculate the difference in days between the due date and bill date
+            delta_days = (due_datex - bill_datex).days
+            if delta_days > 0:
+                payment_terms = delta_days
+                payment_terms_label = "Custom"
+        
+
+         
+        popinstallation_date = ''
+
+        installation_date = bill_data.get("Installation_Date")
+
+        # print("get the alpha ", installation_date)
+        # if installation_date:
+        #   try:
+        #     date_obj = datetime.strptime(installation_date, "%d-%b-%y")
+        #     formatted_date = date_obj.strftime("%Y-%m-%d")
+        #     popinstallation_date = formatted_date
+        #     print("sexxxy",popinstallation_date)
+        #   except ValueError:
+        #     print(f"Invalid Installation_Date format: {installation_date}")
+ 
+
+        bill = {
+            "vendor_id": "2333719000000088671",  # Update as needed
+            "bill_number": bill_data.get("Bill_number", f"TEST-{i+1:03}"),
+            "date": bill_date,
+            "due_date": due_date, 
+            "gst_no": bill_data.get("gst_no"),
+
+            "source_of_supply": bill_data.get("source_of_supply"),  # Dynamic source of supply
+            "destination_of_supply": bill_data.get("destination_of_supply"), 
+            "branch_id": bill_data.get("branch_id"),
+            "branch_name":  bill_data.get("branch_name"),
+
+
+
+
+           
+            "payment_terms": payment_terms,
+            "payment_terms_label": payment_terms_label,
+            "line_items": line_items,
+            "custom_fields": [
+                 {"index": 1, "value": bill_data.get("account_no", ""), "show_on_pdf": True},
+                 {
+                    "index": 3,
+                    "value": installation_date,
+                    "show_on_pdf": True
+                 },
+
+
+                 {"index": 5, "value": bill_data.get("Circuit_ID", ""), "show_on_pdf": True},
+                    
+                 {"index": 4, "value": (bill_data.get("Installation_Address") or "") + " " + (bill_data.get("Installation_Address_1") or "") + " " + (bill_data.get("Installation_Address_2") or ""), "show_on_pdf": True },
+                          
+                            ],
+             "taxes": [
+                {
+                    "tax_id": "2333719000000069428",
+                    "tax_name": "GST (18%)"
+                },
+                #   {
+                #     "tax_id": "2333719000000069416",
+                #     "tax_name": "IGST (18%)"
+                # }
+            ],
+
+
+
+        }
+
+        print("let fffffreak ", bill)
+        installation_otc_adv_charges = bill_data.get("Installation_OTC_Adv_charges")
+        if installation_otc_adv_charges and installation_otc_adv_charges != "Not Found":
+                bill["line_items"].append(
+                    {
+                        "itc_eligibility": "ineligible_others",
+                        "tax_id": "2333719000000069428",
+                        "item_id": "2333719000000075003",
+                        "description": "Installation Charges",
+                        "rate": installation_otc_adv_charges.replace(",", ""),
+                    }
+                )
+       
+ 
+
+        headers = {
+            'Authorization': f'Zoho-oauthtoken {access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(
+            f"{api_url}?organization_id={organization_id}",
+            headers=headers,
+            json=bill
+        )
+        responses.append((bill["bill_number"], response.status_code, response.text))
+
+    return render_template_string(""" 
+  <html>
+<body>
+    <h2>Submission Results</h2>
+    <ul>
+    {% for number, status, text in results %}
+        <li><b>{{ number }}</b> - {{ '✅ Success' if status == 201 else '❌ Failed' }}<br>
+            {% if status != 201 %}<pre>{{ text }}</pre>{% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+
+    <br><br>
+    <a href="/">
+        <button style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+            ⬅️ Go to Home Page
+        </button>
+    </a>
+</body>
+</html>
+
+    """, results=responses)
+
+
+
+def format_date(date_str):
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+    except Exception:
+        return "2025-04-01"
+
+def extract_text_from_pdf(path):
+    with fitz.open(path) as doc:
+        return "\n".join(page.get_text("text") for page in doc)
+
+def process_pdf_to_json(raw_text):
+    structured_data = {
+        "Bill_number": "Not Found",
+        "Bill_Date": "Not Found",
+        "Due_Date": "Not Found"
+    }
+
+    
+        
+    gst_regex_1 = r"\b\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2}\b"  # Standard GST format (with word boundaries)
+
+   
+    gst_regex_2 = r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2})\n"  # Newline-separated GST format
+
+   
+    gst_regex_3 = r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]\d)\n"  # GST number after date
+
+    gst_regex_5 =  r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2})\n[A-Z]{10}\nTata Teleservices GST No:"
+
+  #  gst_regex_4 = r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2})\n([A-Z]{10})\nTata Teleservices GST No:"
+
+    
+
+    # Check if either of the regex patterns match the text
+    if re.search(gst_regex_2, raw_text) or re.search(gst_regex_1, raw_text) or re.search(gst_regex_3, raw_text) or re.findall(gst_regex_5, raw_text):
+        # Apply the second regex for newline-separated GST numbers
+        gst_matches = re.findall(gst_regex_2, raw_text)
+        
+        # Apply the first regex for standard GST format
+        gst_matchesx = re.findall(gst_regex_1, raw_text)
+
+        gst_matchesz = re.findall(gst_regex_3, raw_text)
+
+        gst_matchesp = re.findall(gst_regex_5, raw_text)
+        # gst_matchesp = re.findall(gst_regex_4, raw_text)
+
+        # print("piii",gst_matchesp)
+      
+            # If gst_matches (newline format) have multiple matches, pick the first match
+           
+
+        # Apply logic based on the matches found
+        if gst_matches:
+            # If gst_matches (newline format) have multiple matches, pick the first match
+            if len(gst_matchesp) == 1:
+                structured_data["gst_no"] =  gst_matchesp[0][0] 
+            
+            elif len(gst_matches) >= 2:
+                gst_matchesx 
+                structured_data["gst_no"] = gst_matches[0]  # Use the first match (second match logic was unclear)
+
+      
+            elif gst_matchesz:
+                structured_data["gst_no"] = gst_matchesz[0] 
+            elif gst_matches:
+                structured_data["gst_no"] = gst_matchesx[1] 
+            
+             # Use the first match
+        # elif gst_matchesx:
+        #     # If gst_matchesx (standard format) has matches, pick the second match from this list
+        #      if len(gst_matchesx) >= 2:
+        #         structured_data["gst_no"] = gst_matchesx[1]  # Use the first match (second match logic was unclear)1
+        #      elif gst_matchesx:
+        #         structured_data["gst_no"] = gst_matchesx[0]  # Use the first match
+        else:
+            structured_data["gst_no"] = ""  # Explicitly mark missing values
+    else:
+        structured_data["gst_no"] = ""  # Explicitly mark missing values if no match found
+
+
+
+   
+    
+
+    
+    bgst = structured_data["gst_no"]
+
+
+    patterns = {
+        "Bill_number": r"Invoice No\s*[:\-]?\s*(\d+)",
+        "Bill_Date": r"Bill Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2})",
+        "Due_Date": r"Due Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2}|Pay Immediate)",
+        "Circuit_ID": r"CIRCUIT ID\s*[:\-]?\s*(\d+)", 
+        "account_no": r"Account No\s*[:\-]?\s*(\d+)",
+        "Installation_Address": r"A Address\s*[:\-]?\s*(.*)",
+        "Installation_Address_1": r"A Address1\s*[:\-]?\s*(.*?)(?=\nA Address2|B Address|$)",  # Updated regex for Address1
+        "Installation_Address_2": r"A Address2\s*[:\-]?\s*(.*?)(?=\nB Address|$)",  # Capture the address after A Address2
+        "Installation_Date": r"Link Commissioning Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2})",  
+        # "gst_no": structured_data["gst_no"],
+        "Annual_Rental_charges": r"Annual Rental charges\s*[:\-]?\s*(\d+)",  # Added regex for Annual Rental charges
+     
+        "Bandwidth": r"Bandwidth\s*[:\-]?\s*(\d+\s*Mbps)" , # Added regex for Bandwidth
+
+        "State": r"State Goods and Services Tax [\s\S]+?\s*(.*?)\s*Installation\/ Place of Supply:" ,
+
+        "Installation_OTC_Adv_charges":  r"Installation OTC Adv charges\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)",
+
+        
+    }
+
+    for key, pattern in patterns.items():
+        match = re.search(pattern, raw_text)
+        if match:
+            structured_data[key] = match.group(1)
+
+    bill_plan_pattern = r"Bill Plan\s*[\s\S]*?Rental Charges"
+    bill_plan_match = re.search(bill_plan_pattern, raw_text, re.DOTALL)
+
+    bandwidth_charges = []
+    mpls_charges = []
+
+    if bill_plan_match:
+        bill_plan_text = bill_plan_match.group(0)
+        pattern = r"(Bandwidth|MPLS Port) (Advance Rental|Adv Charges \(ARC\)) \{charges from (\d{2}-\w{3}-\d{2})\s*to\s*(\d{2}-\w{3}-\d{2})\}[\s\S]*?(\d{1,3}(?:,\d{1,3})*\.\d{2})"
+        matches = re.findall(pattern, bill_plan_text)
+
+        for match in matches:
+            record = {
+                "start_date": match[2],
+                "end_date": match[3],
+                "amount": match[4].replace(",", "")
+            }
+            if match[0] == "Bandwidth":
+                bandwidth_charges.append(record)
+            elif match[0] == "MPLS Port":
+                mpls_charges.append(record)
+
+    structured_data["bandwidth_adv_charges"] = bandwidth_charges
+    structured_data["mpls_adv_charges"] = mpls_charges
+
+
+    if structured_data["Due_Date"] == "Pay Immediate":
+     structured_data["Due_Date"] = structured_data.get("Bill_Date", "2025-04-01")
+
+
+
+
+    
+    # Extract the state information
+    state = structured_data.get("State", "").lower()  # Convert to lowercase to avoid case-sensitivity issues
+     
+    # Logic to determine the state code
+    if "maharashtra" in state:
+        structured_data["source_of_supply"] = "MH"
+        structured_data["destination_of_supply"] = "MH"
+        
+        structured_data["branch_id"] = "2333719000000341005"
+        structured_data["branch_name"] = "Maharashtra"
+    elif "tamil nadu" in state:
+        structured_data["source_of_supply"] = "TN"
+        structured_data["destination_of_supply"] = "TN"
+        
+        structured_data["branch_id"] = "2333719000000560008"
+        structured_data["branch_name"] = "Tamil Nadu"
+    elif "delhi" in state:
+        structured_data["source_of_supply"] = "DL"
+        structured_data["destination_of_supply"] = "DL"
+        
+        structured_data["branch_id"] = "2333719000002088148"
+        structured_data["branch_name"] = "Delhi"
+    elif "karnataka" in state:
+        structured_data["source_of_supply"] = "KA"
+        structured_data["destination_of_supply"] = "KA"
+        
+        structured_data["branch_id"] = "2333719000000438014"
+        structured_data["branch_name"] = "Karnataka"
+    elif "gujarat" in state:
+        structured_data["source_of_supply"] = "GJ"
+        structured_data["destination_of_supply"] = "GJ"
+        
+        structured_data["branch_id"] = "2333719000009403024"
+        structured_data["branch_name"] = "Gujarat"
+    elif "haryana" in state:
+        structured_data["source_of_supply"] = "HR"
+        structured_data["destination_of_supply"] = "HR"
+        
+        structured_data["branch_id"] = "2333719000000644006"
+        structured_data["branch_name"] = "Haryana"
+    elif "madhya pradesh" in state:
+        structured_data["source_of_supply"] = "MP"
+        structured_data["destination_of_supply"] = "MP"
+        
+        structured_data["branch_id"] = "2333719000000644015"
+        structured_data["branch_name"] = "Madhya Pradesh"
+    elif "odisha" in state:
+        structured_data["source_of_supply"] = "OD"
+        structured_data["destination_of_supply"] = "OD"
+        
+        structured_data["branch_id"] = "2333719000000894042"
+        structured_data["branch_name"] = "Odisha"
+
+    elif "rajasthan" in state:
+        structured_data["source_of_supply"] = "RJ"
+        structured_data["destination_of_supply"] = "RJ"
+        
+        structured_data["branch_id"] = "2333719000009403051"
+        structured_data["branch_name"] = "Rajasthan"
+
+    elif "telangana" in state:
+        structured_data["source_of_supply"] = "TS"
+        structured_data["destination_of_supply"] = "TS"
+        
+        structured_data["branch_id"] = "2333719000000555008"
+        structured_data["branch_name"] = "Telangana"
+    
+    elif "uttar pradesh" in state:
+        structured_data["source_of_supply"] = "UP"
+        structured_data["destination_of_supply"] = "UP"
+        
+        structured_data["branch_id"] = "2333719000002088163"
+        structured_data["branch_name"] = "Uttar Pradesh"
+
+    elif "west bengal" in state:
+        structured_data["source_of_supply"] = "WB"
+        structured_data["destination_of_supply"] = "WB"
+        
+        structured_data["branch_id"] = "2333719000001333020"
+        structured_data["branch_name"] = "West Bengal"
+    else:
+        structured_data["source_of_supply"] = "Not Found"
+        structured_data["destination_of_supply"] = "Not Found"
+        
+        structured_data["branch_id"] = "MH"
+        structured_data["branch_name"] = "MH"
+ 
+ 
+     
+
+
+    return structured_data
+
+
+    
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
