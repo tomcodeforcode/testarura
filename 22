@@ -1,0 +1,189 @@
+from flask import Flask, render_template, request, jsonify
+import os
+import fitz  # PyMuPDF
+import re
+
+app = Flask(__name__)
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Home page route
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# PDF Processing Route
+@app.route('/upload_pdf', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    files = request.files.getlist('file')
+
+    if not files:
+        return jsonify({"error": "No files selected"}), 400
+
+    # Initialize a list to store results for each uploaded file
+    results = []
+
+    # Process each uploaded PDF file
+    for file in files:
+        if file.filename == '':  # Skip files with no name
+            continue
+        
+        # Save the uploaded file
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+
+        # Extract text from the PDF
+        pdf_text = extract_text_from_pdf(filepath)
+        
+        # Process the extracted text into a structured JSON format
+        result = process_pdf_to_json(pdf_text)
+        
+        # Append the result to the list
+        results.append({
+            "file_name": file.filename,
+            "extracted_text": pdf_text,  # Include extracted text
+            "structured_data": result    # Include structured data from regex matches
+        })
+
+
+        print("GST number for file", file.filename, ":", result["gst_no"])
+    
+    
+    # Return JSON response with all the results
+    return jsonify(results)
+
+# Function to extract text from PDF
+def extract_text_from_pdf(pdf_path):
+    doc = fitz.open(pdf_path)  # Open the PDF using PyMuPDF
+    pdf_text = ""
+
+    # Loop through each page of the PDF
+    for page_num in range(doc.page_count):
+        page = doc.load_page(page_num)  # Load each page
+        page_text = page.get_text("text")  # Extract the text from the page
+        pdf_text += page_text + "\n"  # Append the text from each page
+    
+    return pdf_text
+
+
+# Function to process raw extracted text and convert it into structured JSON
+# Function to process raw extracted text and convert it into structured JSON
+ 
+
+import re
+
+def process_pdf_to_json(raw_text):
+    # Define a dictionary to store the structured data
+    structured_data = {}
+    Vendor = "Tata Teleservices Limited"  # Default vendor name
+
+    # Regular expressions for extracting information
+    patterns = {
+        "Due_Date": r"Due Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2}|Pay Immediate)",
+        "amount_due": r"Amount due before due date\s*[:\-]?\s*(Rs\. [\d,]+(?:\.\d{2})?)",
+        "last_payment": r"Last Payment\s*[:\-]?\s*(Rs\. [\d,]+(?:\.\d{2})?)",
+        "previous_balance": r"Previous Balance\s*[:\-]?\s*(Rs\. [\d,]+(?:\.\d{2})?)",
+        "current_charges": r"Current charges\s*[:\-]?\s*(Rs\. [\d,]+(?:\.\d{2})?)",
+        "bill_amount": r"Bill Amount\s*[:\-]?\s*(Rs\. [\d,]+(?:\.\d{2})?)",
+        "invoice_no": r"Invoice No\s*[:\-]?\s*(\d+)",
+        "bill_date": r"Bill Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2})",
+        "customer_name": r"Customer Name\s*[:\-]?\s*([A-Za-z\s\.]+)",
+        "account_no":  r"Account No\s*[:\-]?\s*(\d+)",
+        "Installation Date": r"Link Commissioning Date\s*[:\-]?\s*(\d{2}-\w{3}-\d{2})",
+        "Installation Address": r"A Address\s*[:\-]?\s*(.*)",
+        "Installation Address_1": r"A Address1\s*[:\-]?\s*(.*?)(?=\nA Address2|B Address|$)",
+        "Installation Address2": r"A Address2\s*[:\-]?\s*(.*?)(?=\nB Address|$)",
+        "Circuit ID":  r"CIRCUIT ID\s*[:\-]?\s*(\d+)",
+        "Vendor": Vendor, 
+        "Installation OTC Adv charges":  r"Installation OTC Adv charges\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)",
+        "State": r"State Goods and Services Tax [\s\S]+?\s*(.*?)\s*Installation\/ Place of Supply:",
+        "soap": r"Bandwidth Adv Charges \(ARC\) \{charges from (\d{2}-\w{3}-\d{2})\s*to\s*(\d{2}-\w{3}-\d{2})\}.*?(\d{1,3},\d{1,3}\.\d{2})",
+       "annual_rental_charges": r"Annual Rental charges\s*\n(\d+)\n",
+
+         "Bandwidth": r"Bandwidth\s*[:\-]?\s*(\d+\s*Mbps)" ,
+
+    }
+
+    # Loop through each pattern and try to match
+    for key, pattern in patterns.items():
+        match = re.search(pattern, raw_text)
+        
+        if match:
+            try:
+                # For other fields, just capture the first match group
+                structured_data[key] = match.group(1)
+            except IndexError:
+                structured_data[key] = "Not Found"  # In case the group is not found
+        else:
+            structured_data[key] = "Not Found"
+
+    bill_plan_pattern = r"Bill Plan\s*[\s\S]*?Rental Charges"
+    bill_plan_match = re.search(bill_plan_pattern, raw_text, re.DOTALL)  # re.DOTALL ensures matching across lines
+
+    if bill_plan_match:
+    # Extracting the bill plan text block
+     bill_plan_text = bill_plan_match.group(0)
+     structured_data["bill_plan_to_rental_charges"] = bill_plan_text
+
+    # Modify the pattern to match both "Bandwidth Advance Rental" or "Bandwidth Adv Charges (ARC)"
+     bandwidth_pattern = r"Bandwidth (Advance Rental|Adv Charges \(ARC\)) \{charges from (\d{2}-\w{3}-\d{2})\s*to\s*(\d{2}-\w{3}-\d{2})\}[\s\S]*?(\d{1,3}(?:,\d{1,3})*\.\d{2})"
+     bandwidth_matches = re.findall(bandwidth_pattern, bill_plan_text)
+
+    # Process bandwidth charges into the desired format
+     if bandwidth_matches:
+        structured_data["bandwidth_adv_charges"] = [
+                {
+                    "start_date": match[1], 
+                    "end_date": match[2], 
+                    "amount": match[3].replace(",", "")  # Remove commas from the amount
+                }
+                for match in bandwidth_matches
+            ]
+     else:
+        structured_data["bandwidth_adv_charges"] = "Not Found"
+    else:
+       structured_data["bill_plan_to_rental_charges"] = "Not Found"
+
+    # Handle GST number extraction
+    gst_regex_1 = r"\b\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2}\b"  # Standard GST format (with word boundaries)
+    gst_regex_2 = r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2})\n"  # Newline-separated GST format
+    gst_regex_3 = r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]\d)\n"  # GST number after date
+    gst_regex_5 =  r"\n(\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z]{2})\n[A-Z]{10}\nTata Teleservices GST No:"
+
+    # Check if any GST regex pattern matches the text
+    if re.search(gst_regex_2, raw_text) or re.search(gst_regex_1, raw_text) or re.search(gst_regex_3, raw_text) or re.findall(gst_regex_5, raw_text):
+        gst_matches = re.findall(gst_regex_2, raw_text)
+        gst_matchesx = re.findall(gst_regex_1, raw_text)
+        gst_matchesz = re.findall(gst_regex_3, raw_text)
+        gst_matchesp = re.findall(gst_regex_5, raw_text)
+
+        if gst_matches:
+            if len(gst_matchesp) == 1:
+                structured_data["gst_no"] = gst_matchesp[0][0] 
+            elif len(gst_matches) >= 2:
+                structured_data["gst_no"] = gst_matches[0]  # Use the first match
+            elif gst_matchesz:
+                structured_data["gst_no"] = gst_matchesz[0] 
+            else:
+                structured_data["gst_no"] = gst_matchesx[1] if len(gst_matchesx) > 1 else gst_matchesx[0]
+        else:
+            structured_data["gst_no"] = ""
+    else:
+        structured_data["gst_no"] = ""  # Explicitly mark missing values if no match found
+
+    # Return the structured JSON data
+    return structured_data
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
